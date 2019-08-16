@@ -1,0 +1,87 @@
+---
+title: "BCC animal data"
+subtitle: "Data preps"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: yes
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+<!-- ------------------------------------------------------------ --> 
+<!-- ------------------------------------------------------------ --> 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width=8, fig.height=6, dpi=300, out.width="800px", out.height="600px")
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+set.seed(12345)
+options(scipen = 999)
+
+library(pacman) 
+p_load(tidyverse, magrittr, readxl, janitor, lubridate, scales,
+       sf, tmap, tmaptools, 
+       skimr, summarytools, sjmisc, kableExtra, naniar)
+
+tmap_mode("view") # makes map interactive
+```
+
+# Geo
+
+## ABS
+
+```{r eval=FALSE, include=FALSE}
+SSC <- st_read("data/geo/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
+               stringsAsFactors = FALSE) %>% 
+  mutate(SSC_CODE16 = as.integer(SSC_CODE16),
+         STE_CODE16 = as.integer(STE_CODE16))
+
+saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
+```
+
+## QSC
+
+```{r eval=FALSE, include=FALSE}
+LB <- st_read("data/geo/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
+               stringsAsFactors = FALSE) %>% 
+  select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
+  mutate(LOC_CODE = as.integer(LOC_CODE)) 
+
+saveRDS(LB, "data/geo/Locality_Boundaries.Rds")
+```
+
+
+# SEIFA
+
+```{r}
+seifa <- read_xls("data/SEIFA/2033055001 - ssc indexes.xls", 
+                  sheet = "Table 1", skip = 5, n_max = 13719, na = "-") %>% 
+  clean_names() %>%
+  remove_empty(c("rows", "cols")) %>% 
+  select(-starts_with("score_")) %>% 
+  dplyr::rename(SSC_CODE16 = x1,
+         SSC_NAME16 = x2,
+         IRSD = decile_4,
+         IRSAD = decile_6,
+         IER = decile_8,
+         IEO = decile_10,
+         URP = x11,
+         caution = x12) %>% 
+    mutate(SSC_CODE16 = as.integer(SSC_CODE16),
+         STE_CODE16 = as.integer(STE_CODE16)) %>% 
+  mutate(caution = ifelse(is.na(caution), "False", "True")) %>% 
+  mutate(caution = as.logical(caution)) %>% 
+  left_join(SSC)
+
+saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
+
+```
+
+
+
