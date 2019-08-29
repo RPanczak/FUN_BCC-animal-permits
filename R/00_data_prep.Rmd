@@ -53,14 +53,14 @@ LB <- st_read("data/geo/QSC_Extracted_Data_20190816_111155192000-13108/Locality_
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
   mutate(LOC_CODE = as.integer(LOC_CODE)) 
 
-saveRDS(LB, "data/geo/Locality_Boundaries.Rds")
+saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
 ```
 
 
 # SEIFA
 
 ```{r}
-seifa <- read_xls("data/SEIFA/2033055001 - ssc indexes.xls", 
+SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls", 
                   sheet = "Table 1", skip = 5, n_max = 13719, na = "-") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -74,12 +74,16 @@ seifa <- read_xls("data/SEIFA/2033055001 - ssc indexes.xls",
          URP = x11,
          caution = x12) %>% 
     mutate(SSC_CODE16 = as.integer(SSC_CODE16),
-         STE_CODE16 = as.integer(STE_CODE16)) %>% 
+         IRSD = as.integer(IRSD),
+         IRSAD = as.integer(IRSAD),
+         IER = as.integer(IER),
+         IEO = as.integer(IEO),
+         URP = as.integer(URP)
+         ) %>% 
   mutate(caution = ifelse(is.na(caution), "False", "True")) %>% 
-  mutate(caution = as.logical(caution)) %>% 
-  left_join(SSC)
+  mutate(caution = as.logical(caution)) 
 
-saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
+saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 
 ```
 
