@@ -25,9 +25,8 @@ set.seed(12345)
 options(scipen = 999)
 
 library(pacman) 
-p_load(tidyverse, magrittr, readxl, janitor, lubridate, scales,
-       sf, tmap, tmaptools, 
-       skimr, summarytools, sjmisc, kableExtra, naniar)
+p_load(tidyverse, readxl, janitor, lubridate,
+       sf, rmapshaper)
 
 tmap_mode("view") # makes map interactive
 ```
@@ -42,6 +41,8 @@ SSC <- st_read("data/geo/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
   mutate(SSC_CODE16 = as.integer(SSC_CODE16),
          STE_CODE16 = as.integer(STE_CODE16))
 
+SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
+
 saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
 ```
 
@@ -52,6 +53,8 @@ LB <- st_read("data/geo/QSC_Extracted_Data_20190816_111155192000-13108/Locality_
                stringsAsFactors = FALSE) %>% 
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
   mutate(LOC_CODE = as.integer(LOC_CODE)) 
+
+LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
 
 saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
 ```
@@ -80,11 +83,9 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
          IEO = as.integer(IEO),
          URP = as.integer(URP)
          ) %>% 
-  mutate(caution = ifelse(is.na(caution), "False", "True")) %>% 
-  mutate(caution = as.logical(caution)) 
+  mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
 
 saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
-
 ```
 
 
