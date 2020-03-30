@@ -175,19 +175,23 @@ In the second analysis `Animal: Breed` variable will be ... using `Dog insurance
 
 ### Dog ownership
 
-We will exclude cases with missing information on breed. 
+We will exclude cases with missing information on breed for all analyses. 
+
+### Dog insurance cost
+
+We will exclude cases with no link to information on the insurance cost in the analyses based on insurance data. 
 
 ### SEIFA
 
-We will exclude neighbourhoods if one of the indices is missing.
+We will exclude neighbourhoods if one of the indices is missing for all analyses.
 
 ## Statistical methods and models, including sampling weights
 
-  
+### Means
+
+### Correlations
 
 ---
-
-# References
 
 # Template info 
 
