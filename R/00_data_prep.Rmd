@@ -57,7 +57,7 @@ SSC <- readRDS("data/geo/clean/SSC_2016_AUST.Rds")
 
 ```{r eval=FALSE, include=FALSE}
 LB <- st_read("data/geo/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
-               stringsAsFactors = FALSE) %>% 
+              stringsAsFactors = FALSE) %>% 
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
   mutate(LOC_CODE = as.integer(LOC_CODE)) 
 
@@ -79,20 +79,20 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
   remove_empty(c("rows", "cols")) %>% 
   select(-starts_with("score_")) %>% 
   dplyr::rename(SSC_CODE16 = x1,
-         SSC_NAME16 = x2,
-         IRSD = decile_4,
-         IRSAD = decile_6,
-         IER = decile_8,
-         IEO = decile_10,
-         URP = x11,
-         caution = x12) %>% 
-    mutate(SSC_CODE16 = as.integer(SSC_CODE16),
+                SSC_NAME16 = x2,
+                IRSD = decile_4,
+                IRSAD = decile_6,
+                IER = decile_8,
+                IEO = decile_10,
+                URP = x11,
+                caution = x12) %>% 
+  mutate(SSC_CODE16 = as.integer(SSC_CODE16),
          IRSD = as.integer(IRSD),
          IRSAD = as.integer(IRSAD),
          IER = as.integer(IER),
          IEO = as.integer(IEO),
          URP = as.integer(URP)
-         ) %>% 
+  ) %>% 
   mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
 
 saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
@@ -104,6 +104,32 @@ SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
 
 # Dog cost 
 
+## Source 1
+
+```{r eval=FALSE, include=FALSE}
+dog_expensive_1 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
+  clean_names() %>%
+  remove_empty(c("rows", "cols")) %>% 
+  # fill(web_source)
+  select(-web_source) %>% 
+  filter(source == "lifestyle") %>% 
+  rename(dog_breed = breed)
+
+View(dog_expensive_1)
+```
+
+## Source 2
+
+```{r eval=FALSE, include=FALSE}
+dog_expensive_2 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
+  clean_names() %>%
+  remove_empty(c("rows", "cols")) %>% 
+  select(-web_source) %>% 
+  filter(source == "pet insurance australia") %>% 
+  rename(dog_breed = breed)
+
+View(dog_expensive_2)
+```
 
 ## Dog insurance
 
@@ -130,7 +156,37 @@ saveRDS(dog_insurance, "data/costs/raw/dog_insurance.Rds") # extracted on the 30
 ```
 
 ```{r}
-dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds")
+dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds") %>% 
+  as_tibble() %>% 
+  clean_names() %>%
+  remove_empty(c("rows", "cols")) %>% 
+  # select(-) %>% 
+  mutate(average_accident_policy_cost_annual = 
+           gsub(",", "",
+                           average_accident_policy_cost_annual, 
+                           fixed = TRUE),
+         average_illness_policy_cost_annual = 
+           gsub(",", "",
+                           average_illness_policy_cost_annual, 
+                           fixed = TRUE),
+         average_comprehensive_policy_cost_annual = 
+           gsub(",", "",
+                           average_comprehensive_policy_cost_annual, 
+                           fixed = TRUE)
+  ) %>% 
+  mutate(average_accident_policy_cost_annual = 
+           as.numeric(gsub("$", "",
+                           average_accident_policy_cost_annual, 
+                           fixed = TRUE)),
+         average_illness_policy_cost_annual = 
+           as.numeric(gsub("$", "",
+                           average_illness_policy_cost_annual, 
+                           fixed = TRUE)),
+         average_comprehensive_policy_cost_annual = 
+           as.numeric(gsub("$", "",
+                           average_comprehensive_policy_cost_annual, 
+                           fixed = TRUE))
+  )
 ```
 
 
