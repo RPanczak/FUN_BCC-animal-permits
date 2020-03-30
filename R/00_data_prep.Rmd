@@ -96,7 +96,6 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 
 ```{r eval=FALSE, include=FALSE}
 # packages needed
-
 # install.packages("rvest")
 
 library(rvest)
@@ -113,8 +112,11 @@ dog_insurance <- dog_insurance[[1]]
 
 head(dog_insurance)
 
-saveRDS(dog_insurance, "data/costs/raw/dog_insurance.Rds") # extracted on the 28 March 2020
+saveRDS(dog_insurance, "data/costs/raw/dog_insurance.Rds") # extracted on the 30 March 2020
 ```
 
+```{r}
+dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds")
+```
 
 
