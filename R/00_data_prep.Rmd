@@ -42,32 +42,46 @@ SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
                stringsAsFactors = FALSE) %>% 
   mutate(SSC_CODE16 = as.integer(SSC_CODE16),
          STE_CODE16 = as.integer(STE_CODE16)) %>% 
-  select(-STE_NAME16, -STE_CODE16, -AREASQKM16)
+  select(-STE_NAME16, -STE_CODE16, -AREASQKM16) %>% 
+  st_transform(3112) %>% 
+  filter(!st_is_empty(geometry))
 
-SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
+# SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
 
 saveRDS(SSC, "data/geo/clean/SSC_2016_AUST.Rds")
+
+plot(st_geometry(SSC))
+# qtm(SSC)
 ```
 
 ```{r}
 SSC <- readRDS("data/geo/clean/SSC_2016_AUST.Rds")
+
+glimpse(SSC)
 ```
 
 ## QSC
 
 ```{r eval=FALSE, include=FALSE}
-LB <- st_read("data/geo/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
+LB <- st_read("data/geo/raw/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
               stringsAsFactors = FALSE) %>% 
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
-  mutate(LOC_CODE = as.integer(LOC_CODE)) 
+  mutate(LOC_CODE = as.integer(LOC_CODE)) %>% 
+  st_transform(3112) %>% 
+  filter(!st_is_empty(geometry))
 
-LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
+# LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
 
 saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
+
+plot(st_geometry(SSC))
+# qtm(SSC)
 ```
 
 ```{r}
 LB <- readRDS("data/geo/clean/Locality_Boundaries.Rds")
+
+glimpse(LB)
 ```
 
 # SEIFA
@@ -87,10 +101,10 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
                 URP = x11,
                 caution = x12) %>% 
   mutate(SSC_CODE16 = as.integer(SSC_CODE16),
-         IRSD = as.integer(IRSD),
-         IRSAD = as.integer(IRSAD),
-         IER = as.integer(IER),
-         IEO = as.integer(IEO),
+         IRSD_d = as.integer(IRSD),
+         IRSAD_d = as.integer(IRSAD),
+         IER_d = as.integer(IER),
+         IEO_d = as.integer(IEO),
          URP = as.integer(URP)
   ) %>% 
   mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
@@ -100,6 +114,8 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 
 ```{r}
 SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
+
+glimpse(SEIFA)
 ```
 
 # Dog cost 
@@ -116,6 +132,14 @@ dog_expensive_1 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>%
   rename(dog_breed = breed)
 
 View(dog_expensive_1)
+
+saveRDS(dog_expensive_1, "data/costs/clean/dog_expensive_1.Rds")
+```
+
+```{r}
+dog_expensive_1 <- readRDS("data/costs/clean/dog_expensive_1.Rds")
+
+glimpse(dog_expensive_1)
 ```
 
 ## Source 2
@@ -129,6 +153,14 @@ dog_expensive_2 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>%
   rename(dog_breed = breed)
 
 View(dog_expensive_2)
+
+saveRDS(dog_expensive_2, "data/costs/clean/dog_expensive_2.Rds")
+```
+
+```{r}
+dog_expensive_2 <- readRDS("data/costs/clean/dog_expensive_2.Rds")
+
+glimpse(dog_expensive_2)
 ```
 
 ## Dog insurance
@@ -187,6 +219,12 @@ dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds") %>%
                            average_comprehensive_policy_cost_annual, 
                            fixed = TRUE))
   )
+
+saveRDS(dog_insurance, "data/costs/clean/dog_insurance.Rds") # extracted on the 30 March 2020
 ```
 
+```{r}
+dog_insurance <- readRDS("data/costs/clean/dog_insurance.Rds")
 
+glimpse(dog_insurance)
+```
