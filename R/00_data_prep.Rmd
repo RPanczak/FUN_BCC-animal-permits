@@ -113,7 +113,7 @@ dog_insurance <- dog_insurance[[1]]
 
 head(dog_insurance)
 
-saveRDS(dog_insurance, "data/costs/dog_insurance.Rds") # extracted on the 28 March 2020
+saveRDS(dog_insurance, "data/costs/raw/dog_insurance.Rds") # extracted on the 28 March 2020
 ```
 
 
