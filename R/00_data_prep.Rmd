@@ -27,7 +27,7 @@ set.seed(12345)
 options(scipen = 999)
 
 library(pacman) 
-p_load(tidyverse, readxl, janitor, lubridate,
+p_load(tidyverse, readxl, janitor, sjmisc,
        sf, rmapshaper, tmap)
 
 tmap_mode("view") # makes map interactive
@@ -101,10 +101,10 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
                 URP = x11,
                 caution = x12) %>% 
   mutate(SSC_CODE16 = as.integer(SSC_CODE16),
-         IRSD_d = as.integer(IRSD),
-         IRSAD_d = as.integer(IRSAD),
-         IER_d = as.integer(IER),
-         IEO_d = as.integer(IEO),
+         IRSD = as.integer(IRSD),
+         IRSAD = as.integer(IRSAD),
+         IER = as.integer(IER),
+         IEO = as.integer(IEO),
          URP = as.integer(URP)
   ) %>% 
   mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
@@ -116,6 +116,10 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
 
 glimpse(SEIFA)
+```
+
+```{r}
+frq(SEIFA, IRSD)
 ```
 
 # Dog cost 
@@ -142,6 +146,10 @@ dog_expensive_1 <- readRDS("data/costs/clean/dog_expensive_1.Rds")
 glimpse(dog_expensive_1)
 ```
 
+```{r}
+frq(dog_expensive_1, dog_breed)
+```
+
 ## Source 2
 
 ```{r eval=FALSE, include=FALSE}
@@ -161,6 +169,10 @@ saveRDS(dog_expensive_2, "data/costs/clean/dog_expensive_2.Rds")
 dog_expensive_2 <- readRDS("data/costs/clean/dog_expensive_2.Rds")
 
 glimpse(dog_expensive_2)
+```
+
+```{r}
+frq(dog_expensive_2, dog_breed)
 ```
 
 ## Dog insurance
@@ -227,4 +239,8 @@ saveRDS(dog_insurance, "data/costs/clean/dog_insurance.Rds") # extracted on the 
 dog_insurance <- readRDS("data/costs/clean/dog_insurance.Rds")
 
 glimpse(dog_insurance)
+```
+
+```{r}
+frq(dog_insurance, cost_compared_to_other_breeds)
 ```
