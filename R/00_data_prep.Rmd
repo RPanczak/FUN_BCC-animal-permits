@@ -28,7 +28,7 @@ options(scipen = 999)
 
 library(pacman) 
 p_load(tidyverse, readxl, janitor, lubridate,
-       sf, rmapshaper)
+       sf, rmapshaper, tmap)
 
 tmap_mode("view") # makes map interactive
 ```
@@ -38,14 +38,19 @@ tmap_mode("view") # makes map interactive
 ## ABS
 
 ```{r eval=FALSE, include=FALSE}
-SSC <- st_read("data/geo/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
+SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
                stringsAsFactors = FALSE) %>% 
   mutate(SSC_CODE16 = as.integer(SSC_CODE16),
-         STE_CODE16 = as.integer(STE_CODE16))
+         STE_CODE16 = as.integer(STE_CODE16)) %>% 
+  select(-STE_NAME16, -STE_CODE16, -AREASQKM16)
 
 SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
 
-saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
+saveRDS(SSC, "data/geo/clean/SSC_2016_AUST.Rds")
+```
+
+```{r}
+SSC <- readRDS("data/geo/clean/SSC_2016_AUST.Rds")
 ```
 
 ## QSC
@@ -61,6 +66,9 @@ LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
 saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
 ```
 
+```{r}
+LB <- readRDS("data/geo/clean/Locality_Boundaries.Rds")
+```
 
 # SEIFA
 
@@ -90,7 +98,12 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
 saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 ```
 
+```{r}
+SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
+```
+
 # Dog cost 
+
 
 ## Dog insurance
 
