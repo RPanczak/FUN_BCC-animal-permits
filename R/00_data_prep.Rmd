@@ -108,6 +108,7 @@ dog_insurance <- url %>%
   xml2::read_html() %>%
   html_nodes(xpath='//*[@id="post-1016"]/div/table') %>%
   html_table()
+
 dog_insurance <- dog_insurance[[1]]
 
 head(dog_insurance)
