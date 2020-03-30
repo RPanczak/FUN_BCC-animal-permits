@@ -12,6 +12,8 @@ output:
     toc: yes
     toc_depth: 4
     toc_float: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 <!-- ------------------------------------------------------------ --> 
@@ -89,3 +91,30 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 ```
 
 # Dog cost 
+
+## Dog insurance
+
+```{r eval=FALSE, include=FALSE}
+# packages needed
+
+# install.packages("rvest")
+
+library(rvest)
+library(tidyverse)
+
+# scraping table done with this using chrome: https://www.r-bloggers.com/using-rvest-to-scrape-an-html-table/
+url <- 'https://top10petinsurance.com.au/pet-insurance-prices/'   
+
+dog_insurance <- url %>%
+  xml2::read_html() %>%
+  html_nodes(xpath='//*[@id="post-1016"]/div/table') %>%
+  html_table()
+dog_insurance <- dog_insurance[[1]]
+
+head(dog_insurance)
+
+saveRDS(dog_insurance, "data/costs/dog_insurance.Rds") # extracted on the 28 March 2020
+```
+
+
+
