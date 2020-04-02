@@ -228,10 +228,10 @@ saveRDS(dog_insurance, "data/costs/clean/dog_insurance.Rds") # extracted on the 
 
 ```{r}
 dog_insurance <- readRDS("data/costs/clean/dog_insurance.Rds")
-
-glimpse(dog_insurance)
 ```
 
 ```{r}
-frq(dog_insurance, cost_compared_to_other_breeds)
+dog_insurance %>% 
+  select(dog_breed, cost_compared_to_other_breeds) %>% 
+  kableExtra::kable()
 ```
