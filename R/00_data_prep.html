@@ -1484,7 +1484,7 @@ div.tocify {
 <h1 class="title toc-ignore">BCC animal data</h1>
 <h3 class="subtitle">Data preps</h3>
 <h4 class="author">Radoslaw Panczak</h4>
-<h4 class="date">30 März, 2020</h4>
+<h4 class="date">02 April, 2020</h4>
 
 </div>
 
@@ -1495,16 +1495,16 @@ div.tocify {
 <h1><span class="header-section-number">1</span> Neighbourhood boundaries</h1>
 <div id="abs" class="section level2">
 <h2><span class="header-section-number">1.1</span> ABS</h2>
-<pre><code>## Observations: 3,262
-## Variables: 3
+<pre><code>## Rows: 3,262
+## Columns: 3
 ## $ SSC_CODE16 &lt;int&gt; 30001, 30002, 30003, 30004, 30005, 30006, 30007, 30008, 30…
 ## $ SSC_NAME16 &lt;chr&gt; &quot;Abbeywood&quot;, &quot;Abbotsford (Qld)&quot;, &quot;Abercorn&quot;, &quot;Abergowrie&quot;,…
 ## $ geometry   &lt;MULTIPOLYGON [m]&gt; MULTIPOLYGON (((1735082 -30..., MULTIPOLYGON …</code></pre>
 </div>
 <div id="qsc" class="section level2">
 <h2><span class="header-section-number">1.2</span> QSC</h2>
-<pre><code>## Observations: 3,382
-## Variables: 5
+<pre><code>## Rows: 3,382
+## Columns: 5
 ## $ ADMINAREAN &lt;chr&gt; &quot;ALSACE, CENTRAL HIGHLANDS REGIONAL&quot;, &quot;ALTON DOWNS, ROCKHA…
 ## $ LOC_CODE   &lt;int&gt; 5001, 5373, 59, 4487, 3425, 5263, 4656, 62, 3587, 63, 64, …
 ## $ LOCALITY   &lt;chr&gt; &quot;Alsace&quot;, &quot;Alton Downs&quot;, &quot;Alva&quot;, &quot;Amamoor Creek&quot;, &quot;Amamoor…
@@ -1514,8 +1514,8 @@ div.tocify {
 </div>
 <div id="seifa" class="section level1">
 <h1><span class="header-section-number">2</span> SEIFA</h1>
-<pre><code>## Observations: 13,713
-## Variables: 8
+<pre><code>## Rows: 13,713
+## Columns: 8
 ## $ SSC_CODE16 &lt;int&gt; 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10…
 ## $ SSC_NAME16 &lt;chr&gt; &quot;Aarons Pass&quot;, &quot;Abbotsbury&quot;, &quot;Abbotsford (NSW)&quot;, &quot;Abercrom…
 ## $ IRSD       &lt;int&gt; 1, 9, 8, 10, 4, 1, 3, 9, 7, 2, 5, 7, 2, 10, 3, 6, 10, 2, 8…
@@ -1543,72 +1543,127 @@ div.tocify {
 </div>
 <div id="dog-cost" class="section level1">
 <h1><span class="header-section-number">3</span> Dog cost</h1>
-<div id="source-1" class="section level2">
-<h2><span class="header-section-number">3.1</span> Source 1</h2>
-<pre><code>## Observations: 20
-## Variables: 5
-## $ dog_breed           &lt;chr&gt; &quot;Black Russian Terrier&quot;, &quot;Saint Bernard&quot;, &quot;Irish …
-## $ cost_in_aud_lower   &lt;dbl&gt; NA, NA, 1500, 1500, 2500, 2500, NA, NA, 600, NA, …
-## $ cost_in_aud_upper   &lt;dbl&gt; NA, NA, 2000, 4500, 5000, 6000, NA, NA, 3000, NA,…
-## $ cost_in_aud_average &lt;dbl&gt; 3500, 1500, NA, NA, NA, NA, 3000, 3000, NA, 3000,…
-## $ source              &lt;chr&gt; &quot;lifestyle&quot;, &quot;lifestyle&quot;, &quot;lifestyle&quot;, &quot;lifestyle…</code></pre>
-<pre><code>## 
-## dog_breed &lt;character&gt;
-## # total N=20  valid N=20  mean=10.50  sd=5.92
-## 
-##                       val frq raw.prc valid.prc cum.prc
-##                     Akita   1       5         5       5
-##                   Azawakh   1       5         5      10
-##     Black Russian Terrier   1       5         5      15
-##       Canadian Eskimo Dog   1       5         5      20
-##                 Chow Chow   1       5         5      25
-##           English Bulldog   1       5         5      30
-##            French Bulldog   1       5         5      35
-##            French Mastiff   1       5         5      40
-##           German Shepherd   1       5         5      45
-##  Hairless Chinese Crested   1       5         5      50
-##           Irish Wolfhound   1       5         5      55
-##                   Lowchen   1       5         5      60
-##                   Maltese   1       5         5      65
-##             Pharaoh Hound   1       5         5      70
-##                Rottweiler   1       5         5      75
-##             Saint Bernard   1       5         5      80
-##                    Saluki   1       5         5      85
-##                   Samoyed   1       5         5      90
-##           Tibetan Mastiff   1       5         5      95
-##         Yorkshire Terrier   1       5         5     100
-##                      &lt;NA&gt;   0       0        NA      NA</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+dog_breed
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Akita
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Azawakh
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black Russian Terrier
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Canadian Eskimo Dog
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Chow Chow
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+English Bulldog
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+French Bulldog
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+French Mastiff
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+German Shepherd
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Hairless Chinese Crested
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Irish Wolfhound
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lowchen
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Maltese
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pharaoh Hound
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rottweiler
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Saint Bernard
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Saluki
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Samoyed
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tibetan Mastiff
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yorkshire Terrier
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yorkshire Terriers
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="source-2" class="section level2">
-<h2><span class="header-section-number">3.2</span> Source 2</h2>
-<pre><code>## Observations: 10
-## Variables: 5
-## $ dog_breed           &lt;chr&gt; &quot;Yorkshire Terriers&quot;, &quot;Rottweiler&quot;, &quot;Saluki&quot;, &quot;Ph…
-## $ cost_in_aud_lower   &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, 2000, 8000
-## $ cost_in_aud_upper   &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, 20000, 10000
-## $ cost_in_aud_average &lt;dbl&gt; 2000, 6000, 6000, 7000, 9000, 10000, 10000, 10000…
-## $ source              &lt;chr&gt; &quot;pet insurance australia&quot;, &quot;pet insurance austral…</code></pre>
-<pre><code>## 
-## dog_breed &lt;character&gt;
-## # total N=10  valid N=10  mean=5.50  sd=3.03
-## 
-##                 val frq raw.prc valid.prc cum.prc
-##           Chow Chow   1      10        10      10
-##     English Bulldog   1      10        10      20
-##      French Bulldog   1      10        10      30
-##             Lowchen   1      10        10      40
-##       Pharaoh Hound   1      10        10      50
-##          Rottweiler   1      10        10      60
-##              Saluki   1      10        10      70
-##             Samoyed   1      10        10      80
-##     Tibetan Mastiff   1      10        10      90
-##  Yorkshire Terriers   1      10        10     100
-##                &lt;NA&gt;   0       0        NA      NA</code></pre>
-</div>
-<div id="dog-insurance" class="section level2">
-<h2><span class="header-section-number">3.3</span> Dog insurance</h2>
-<pre><code>## Observations: 558
-## Variables: 5
+<div id="dog-insurance" class="section level1">
+<h1><span class="header-section-number">4</span> Dog insurance</h1>
+<pre><code>## Rows: 558
+## Columns: 5
 ## $ dog_breed                                &lt;chr&gt; &quot;Hygen Hound Cross&quot;, &quot;French…
 ## $ average_accident_policy_cost_annual      &lt;dbl&gt; 497, 567, 567, 558, 384, 497…
 ## $ average_illness_policy_cost_annual       &lt;dbl&gt; 1161, 1118, 1118, 1067, 1158…
@@ -1623,7 +1678,6 @@ div.tocify {
 ##                Below average 457   81.90     81.90   92.29
 ##  Significantly above average  43    7.71      7.71  100.00
 ##                         &lt;NA&gt;   0    0.00        NA      NA</code></pre>
-</div>
 </div>
 
 

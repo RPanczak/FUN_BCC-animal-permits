@@ -113,20 +113,18 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 ```
 
 ```{r}
-SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
+SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds") %>% 
+  right_join(SSC)
 
-glimpse(SEIFA)
-```
+  glimpse(SEIFA)
 
-```{r}
-frq(SEIFA, IRSD)
+# frq(SEIFA, IRSD)
 ```
 
 # Dog cost 
 
+```{r include=FALSE}
 ## Source 1
-
-```{r eval=FALSE, include=FALSE}
 dog_expensive_1 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -135,24 +133,9 @@ dog_expensive_1 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>%
   filter(source == "lifestyle") %>% 
   rename(dog_breed = breed)
 
-View(dog_expensive_1)
-
-saveRDS(dog_expensive_1, "data/costs/clean/dog_expensive_1.Rds")
-```
-
-```{r}
-dog_expensive_1 <- readRDS("data/costs/clean/dog_expensive_1.Rds")
-
-glimpse(dog_expensive_1)
-```
-
-```{r}
-frq(dog_expensive_1, dog_breed)
-```
+# View(dog_expensive_1)
 
 ## Source 2
-
-```{r eval=FALSE, include=FALSE}
 dog_expensive_2 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -160,22 +143,25 @@ dog_expensive_2 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>%
   filter(source == "pet insurance australia") %>% 
   rename(dog_breed = breed)
 
-View(dog_expensive_2)
-
-saveRDS(dog_expensive_2, "data/costs/clean/dog_expensive_2.Rds")
+# View(dog_expensive_2)
 ```
+
 
 ```{r}
-dog_expensive_2 <- readRDS("data/costs/clean/dog_expensive_2.Rds")
+## Combined
+dog_expensive <- 
+  select(dog_expensive_1, dog_breed) %>% 
+  bind_rows(select(dog_expensive_2, dog_breed)) %>% 
+  distinct() %>% 
+  arrange(dog_breed)
 
-glimpse(dog_expensive_2)
+saveRDS(dog_expensive, "data/costs/clean/dog_expensive.Rds")
+
+kableExtra::kable(dog_expensive)
 ```
 
-```{r}
-frq(dog_expensive_2, dog_breed)
-```
 
-## Dog insurance
+# Dog insurance
 
 ```{r eval=FALSE, include=FALSE}
 # packages needed
@@ -207,16 +193,16 @@ dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds") %>%
   # select(-) %>% 
   mutate(average_accident_policy_cost_annual = 
            gsub(",", "",
-                           average_accident_policy_cost_annual, 
-                           fixed = TRUE),
+                average_accident_policy_cost_annual, 
+                fixed = TRUE),
          average_illness_policy_cost_annual = 
            gsub(",", "",
-                           average_illness_policy_cost_annual, 
-                           fixed = TRUE),
+                average_illness_policy_cost_annual, 
+                fixed = TRUE),
          average_comprehensive_policy_cost_annual = 
            gsub(",", "",
-                           average_comprehensive_policy_cost_annual, 
-                           fixed = TRUE)
+                average_comprehensive_policy_cost_annual, 
+                fixed = TRUE)
   ) %>% 
   mutate(average_accident_policy_cost_annual = 
            as.numeric(gsub("$", "",
