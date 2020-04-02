@@ -31,6 +31,12 @@ p_load(tidyverse, readxl, janitor, sjmisc,
        sf, rmapshaper, tmap)
 
 tmap_mode("view") # makes map interactive
+
+# library("tidylog")
+# library("conflicted")
+# for (f in getNamespaceExports("tidylog")) {
+#   conflicted::conflict_prefer(f, "tidylog", quiet = TRUE)
+# }
 ```
 
 # Neighbourhood boundaries
@@ -113,10 +119,9 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 ```
 
 ```{r}
-SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds") %>% 
-  right_join(SSC)
+SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
 
-  glimpse(SEIFA)
+glimpse(SEIFA)
 
 # frq(SEIFA, IRSD)
 ```
