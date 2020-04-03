@@ -1484,7 +1484,7 @@ div.tocify {
 <h1 class="title toc-ignore">BCC animal data</h1>
 <h3 class="subtitle">Data preps</h3>
 <h4 class="author">Radoslaw Panczak</h4>
-<h4 class="date">02 April, 2020</h4>
+<h4 class="date">03 April, 2020</h4>
 
 </div>
 
@@ -1495,21 +1495,9 @@ div.tocify {
 <h1><span class="header-section-number">1</span> Neighbourhood boundaries</h1>
 <div id="abs" class="section level2">
 <h2><span class="header-section-number">1.1</span> ABS</h2>
-<pre><code>## Rows: 3,262
-## Columns: 3
-## $ SSC_CODE16 &lt;int&gt; 30001, 30002, 30003, 30004, 30005, 30006, 30007, 30008, 30…
-## $ SSC_NAME16 &lt;chr&gt; &quot;Abbeywood&quot;, &quot;Abbotsford (Qld)&quot;, &quot;Abercorn&quot;, &quot;Abergowrie&quot;,…
-## $ geometry   &lt;MULTIPOLYGON [m]&gt; MULTIPOLYGON (((1735082 -30..., MULTIPOLYGON …</code></pre>
 </div>
 <div id="qsc" class="section level2">
 <h2><span class="header-section-number">1.2</span> QSC</h2>
-<pre><code>## Rows: 3,382
-## Columns: 5
-## $ ADMINAREAN &lt;chr&gt; &quot;ALSACE, CENTRAL HIGHLANDS REGIONAL&quot;, &quot;ALTON DOWNS, ROCKHA…
-## $ LOC_CODE   &lt;int&gt; 5001, 5373, 59, 4487, 3425, 5263, 4656, 62, 3587, 63, 64, …
-## $ LOCALITY   &lt;chr&gt; &quot;Alsace&quot;, &quot;Alton Downs&quot;, &quot;Alva&quot;, &quot;Amamoor Creek&quot;, &quot;Amamoor…
-## $ LGA        &lt;chr&gt; &quot;Central Highlands Regional&quot;, &quot;Rockhampton Regional&quot;, &quot;Bur…
-## $ geometry   &lt;MULTIPOLYGON [m]&gt; MULTIPOLYGON (((1551854 -27..., MULTIPOLYGON …</code></pre>
 </div>
 </div>
 <div id="seifa" class="section level1">
@@ -1636,23 +1624,130 @@ Tibetan Mastiff
 Yorkshire Terrier
 </td>
 </tr>
-<tr>
-<td style="text-align:left;">
-Yorkshire Terriers
-</td>
-</tr>
 </tbody>
 </table>
 </div>
 <div id="dog-insurance" class="section level1">
 <h1><span class="header-section-number">4</span> Dog insurance</h1>
-<pre><code>## Rows: 558
-## Columns: 5
-## $ dog_breed                                &lt;chr&gt; &quot;Hygen Hound Cross&quot;, &quot;French…
-## $ average_accident_policy_cost_annual      &lt;dbl&gt; 497, 567, 567, 558, 384, 497…
-## $ average_illness_policy_cost_annual       &lt;dbl&gt; 1161, 1118, 1118, 1067, 1158…
-## $ average_comprehensive_policy_cost_annual &lt;dbl&gt; 1221, 1189, 1189, 1135, 1230…
-## $ cost_compared_to_other_breeds            &lt;chr&gt; &quot;Significantly above average…</code></pre>
+<div id="thre-major-categories" class="section level2">
+<h2><span class="header-section-number">4.1</span> Thre major categories</h2>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+val
+</th>
+<th style="text-align:left;">
+label
+</th>
+<th style="text-align:right;">
+frq
+</th>
+<th style="text-align:right;">
+raw.prc
+</th>
+<th style="text-align:right;">
+valid.prc
+</th>
+<th style="text-align:right;">
+cum.prc
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Above average
+</td>
+<td style="text-align:left;">
+&lt;none&gt;
+</td>
+<td style="text-align:right;">
+58
+</td>
+<td style="text-align:right;">
+10.39
+</td>
+<td style="text-align:right;">
+10.39
+</td>
+<td style="text-align:right;">
+10.39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Below average
+</td>
+<td style="text-align:left;">
+&lt;none&gt;
+</td>
+<td style="text-align:right;">
+457
+</td>
+<td style="text-align:right;">
+81.90
+</td>
+<td style="text-align:right;">
+81.90
+</td>
+<td style="text-align:right;">
+92.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Significantly above average
+</td>
+<td style="text-align:left;">
+&lt;none&gt;
+</td>
+<td style="text-align:right;">
+43
+</td>
+<td style="text-align:right;">
+7.71
+</td>
+<td style="text-align:right;">
+7.71
+</td>
+<td style="text-align:right;">
+100.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="individual-breeds" class="section level2">
+<h2><span class="header-section-number">4.2</span> Individual breeds</h2>
 <table>
 <thead>
 <tr>
@@ -6131,6 +6226,7 @@ Below average
 </tr>
 </tbody>
 </table>
+</div>
 </div>
 
 

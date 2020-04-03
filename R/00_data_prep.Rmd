@@ -27,8 +27,8 @@ set.seed(12345)
 options(scipen = 999)
 
 library(pacman) 
-p_load(tidyverse, readxl, janitor, lubridate,
-       sf, rmapshaper)
+p_load(tidyverse, readxl, janitor, lubridate, sjmisc,
+       sf, tmap, rmapshaper)
 
 tmap_mode("view") # makes map interactive
 
@@ -127,10 +127,7 @@ dog_expensive_2 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>%
   rename(dog_breed = breed)
 
 # View(dog_expensive_2)
-```
 
-
-```{r}
 ## Combined
 dog_expensive <- 
   select(dog_expensive_1, dog_breed) %>% 
@@ -138,7 +135,14 @@ dog_expensive <-
   distinct() %>% 
   arrange(dog_breed)
 
+rm(dog_expensive_1, dog_expensive_2)
+
 saveRDS(dog_expensive, "data/costs/clean/dog_expensive.Rds")
+```
+
+
+```{r}
+dog_expensive <- readRDS("data/costs/clean/dog_expensive.Rds")
 
 kableExtra::kable(dog_expensive)
 ```
@@ -209,6 +213,16 @@ saveRDS(dog_insurance, "data/costs/clean/dog_insurance.Rds") # extracted on the 
 ```{r}
 dog_insurance <- readRDS("data/costs/clean/dog_insurance.Rds")
 ```
+
+## Thre major categories
+
+```{r}
+dog_insurance %>% 
+  frq(cost_compared_to_other_breeds) %>% 
+  kableExtra::kable()
+```
+
+## Individual breeds
 
 ```{r}
 dog_insurance %>% 
