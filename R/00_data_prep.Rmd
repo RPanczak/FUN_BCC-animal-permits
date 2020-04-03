@@ -107,35 +107,16 @@ glimpse(SEIFA)
 # Dog cost 
 
 ```{r include=FALSE}
-## Source 1
-dog_cost_1 <- read_xlsx("data/costs/raw/dog_cost.xlsx") %>% 
+dog_cost <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
   # fill(web_source)
   select(-web_source) %>% 
-  filter(source == "lifestyle") %>% 
-  rename(dog_breed = breed)
-
-# View(dog_cost_1)
-
-## Source 2
-dog_cost_2 <- read_xlsx("data/costs/raw/dog_cost.xlsx") %>% 
-  clean_names() %>%
-  remove_empty(c("rows", "cols")) %>% 
-  select(-web_source) %>% 
-  filter(source == "pet insurance australia") %>% 
-  rename(dog_breed = breed)
-
-# View(dog_cost_2)
-
-## Combined
-dog_cost <- 
-  select(dog_cost_1, dog_breed) %>% 
-  bind_rows(select(dog_cost_2, dog_breed)) %>% 
+  # filter(source == "lifestyle") %>% 
+  rename(dog_breed = breed) %>%  
+  select(dog_breed) %>% 
   distinct() %>% 
   arrange(dog_breed)
-
-rm(dog_cost_1, dog_cost_2)
 
 saveRDS(dog_cost, "data/costs/clean/dog_cost.Rds")
 ```
