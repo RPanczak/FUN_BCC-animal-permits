@@ -99,11 +99,11 @@ To access data on `expensive dog breeds in Australia`, we typed these phrases in
 
 ### Dog insurance cost
 
-We scraped the `Dog insurance cost` dataset from the Australian [Top 10 Pet Insurance](https://top10petinsurance.com.au/pet-insurance-prices/) website on the 30 March 2020. It provides insurance cost for the `r length(unique(dog_insurance$"Dog Breed"))` most popular dog breeds in Australia. Insurance costs are based on a 1-year-old male, desexed dog with a 24-year-old owner living in Sydney (postcode 2010), Australia. The data lists the average cost of six Australian pet insurance providers separately for a comprehensive, an accident and an illness pet insurance with zero excess as of June 2017. In addition, it provides a variable on insurance cost for each breed compared to other breeds, which are categorised as "significantly above average", "above average", and "bellow average". 
+We scraped the `Dog insurance cost` dataset from the Australian [Top 10 Pet Insurance](https://top10petinsurance.com.au/pet-insurance-prices/) website on the 30 March 2020. It provides insurance cost for the `r length(unique(dog_insurance$"Dog Breed"))` most popular dog breeds in Australia. Insurance costs are based on a 1-year-old male, desexed dog with a 24-year-old owner living in Sydney (postcode 2010), Australia. The data lists the average cost of six Australian pet insurance providers separately for a comprehensive, an accident and an illness pet insurance with zero excess as of June 2017. 
 
 ### SEIFA
 
-SEIFA indices are derived from 2016 census data and are available from [Austrlian Bureau of Statistics](https://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/2033.0.55.0012016?OpenDocument) (ABS).
+SEIFA indices are derived from 2016 census data and are available from the [Austrlian Bureau of Statistics](https://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/2033.0.55.0012016?OpenDocument) (ABS).
 
 We will search for associations of `Dog ownership` variables with all four indexes: 
 
@@ -156,17 +156,11 @@ Not applicable.
 
 ### Dog buying cost
 
-First, we merged the two datasets informing on the buying cost of dog breeds (lifestyle and Pet Insurance Australia) into one dataset. Breeds that were named slightly different (e.g. typos, plural) but clearly referred to the same dog breed were treated as the same and corrected accordingly (e.g. Yorkshire Terrier and Yorkshire Terriers). This new dataset listed 20 expensive dog breeds and we named it "dog cost".
-
-Second, we merged the two datasets "dog cost" and "dog ownership" by names of dog breeds. Again, we corrected for typos or plural to have a consistent set of dog breed names. Dog breeds that were listed both on the "dog cost" and the "dog ownership" dataset were considered to be expensive; dog breeds that were not listed on the "dog cost" but on the "dog ownership" dataset were considered to be not expensive; dog breeds that were listed on the "dog cost" but not on the "dog ownership" dataset were considered to be missing. We created a binary variable for dog buying cost (1=expensive, 0=not expensive).
+We merged the two datasets informing on the buying cost of dog breeds (lifestyle and Pet Insurance Australia) into one dataset. Breeds that were named slightly different (e.g. typos, plural) but clearly referred to the same dog breed were treated as the same and corrected accordingly (e.g. Yorkshire Terrier and Yorkshire Terriers). This new dataset listed 20 expensive dog breeds and we named it "dog cost".
 
 ### Dog insurance cost
 
-As there are no guidelines on how to use the three categories "significantly above average", "above average", and "below average", we decided to collaps the categories in two different ways to receive two variables with two categories each.
-
-First, we collapsed the categories "above average" and "below average". We created a binary variable for dog insurance cost (1=significantly above average, 0=not significantly above average).
-
-Second, we collapsed the categories "significantly above average" and "above average". We created a binary variable for dog insurance cost (1=above average, 0=bellow average). Dog breeds that were listed in the "dog ownership" dataset but had no information on insurance cost were considered as missing.
+This dataset provides a variable on insurance cost for each breed compared to other breeds, which are categorised as "significantly above average", "above average", and "bellow average". 
 
 ## Indices 
 
@@ -180,13 +174,15 @@ Four `SEIFA` indicators come in the form of indices. As recommended by ABS, we w
 
 ### Dog ownership
 
-In the first analysis, the variable `Animal: Breed` will be recoded to binary using the `Dog cost` dataset. 
+We combined the two datasets "dog cost" and "dog ownership" using the variables `breed` and `Animal: Breed`, respectively, storing information on names of dog breeds. We corrected for typos or plural to have a consistent set of dog breed names. Dog breeds that were listed both on the "dog cost" and the "dog ownership" dataset were considered to be expensive; dog breeds that were not listed on the "dog cost" but on the "dog ownership" dataset were considered to be not expensive; dog breeds that were listed on the "dog cost" but not on the "dog ownership" dataset were considered to be missing. We created a binary variable for dog buying cost (1=expensive, 0=not expensive).
 
-The variable `Application Location: Suburb` will then be used to aggregate the expensive and total amount of dogs in neighbourhood. 
+The variable `Application Location: Suburb` will then be used to aggregate the expensive and total amount of dogs in the neighbourhood. These two variables will then be used to derive proportion.
 
-These two variables will then be used to derive proportion.
+### Dog insurance cost
 
-In the second analysis the variable `Animal: Breed` will be ... using `Dog insurance cost` dataset. 
+As there are no guidelines on how to use the three categories "significantly above average", "above average", and "below average" of the `Dog insurance cost` dataset, we decided to collapse the categories in two different ways to receive two variables with two categories each.
+
+First, we collapsed the categories "above average" and "below average". We created a binary variable for dog insurance cost (1=significantly above average, 0=not significantly above average). Second, we collapsed the categories "significantly above average" and "above average". We created a binary variable for dog insurance cost (1=above average, 0=bellow average).
 
 ## Missing Data
 
