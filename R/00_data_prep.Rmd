@@ -44,7 +44,7 @@ tmap_mode("view") # makes map interactive
 ## ABS
 
 ```{r eval=FALSE, include=FALSE}
-SSC <- st_read("data/geo/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
+SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
                stringsAsFactors = FALSE) %>% 
   mutate(SSC_CODE16 = as.integer(SSC_CODE16)) %>% 
   select(-STE_NAME16, -STE_CODE16, -AREASQKM16) %>% 	
@@ -59,7 +59,7 @@ saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
 ## QSC
 
 ```{r eval=FALSE, include=FALSE}
-LB <- st_read("data/geo/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
+LB <- st_read("data/geo/raw/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
               stringsAsFactors = FALSE) %>% 
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
   mutate(LOC_CODE = as.integer(LOC_CODE)) %>% 
