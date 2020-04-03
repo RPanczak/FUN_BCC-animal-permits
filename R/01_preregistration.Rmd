@@ -54,7 +54,7 @@ Census variables have been widely used for this purpose with more recent attempt
 
 We will attempt to answer the question if the dog breed ownership data can be used as proxy for SEP of suburbs using the city of Brisbane, Australia as an example.
 
-We hypothesize that the cost of buying and maintaining the dog is a proxy for socioeconomic position of the owner. In the absence of individual level data we hypothesize that these associations will hold on the neighbourhood level. This will be indicated by higher amount of expensive dog breeds among all dogs in the neighbourhood. 
+We assume that the cost of buying and maintaining the dog is a proxy for socioeconomic position of the owner. We hypothesize that the aggregated dog ownership data to the neighbourhhood level will closely reflect the traditional indices of SEP. 
 
 ---
 
