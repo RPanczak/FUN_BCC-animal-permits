@@ -20,6 +20,7 @@ library(tidyverse)
 
 # data
 dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds")
+dog_cost <- readRDS("data/costs/clean/dog_cost.Rds")
 
 ```
 
@@ -189,7 +190,15 @@ We will exclude neighbourhoods if one of the indices is missing for all analyses
 
 ### Means
 
+We will calculate mean and SD values of percentage of expensive dogs per each decile of each SEIFA index. Expensive dogs will be define threefold - see definitions above in the ownership and insurance cost datasets.
+
 ### Correlations
+
+We will divide neighbourhoods into deciles on the basis of percentage of expensive dogs among all dogs. Again, we will use three definitions of expensive dogs (see aboove). We will calculate Kendall’s correlation coefficient between these two deciles. We will also calculate agreement between two deciles by crosstabulating them and checking how many neighbourhoods agree on the decile (ie. are on the diagonal of the crosstabulation table).
+
+### PCA index
+
+Dog insurance data will be used to create share of all dogs in three categories in each neighbourhood: `Below average`, `Above average`, `Significantly above average`. These trhee variables will then be used to in PCA analysis and first component will then be sued to create continuous index. Index will be then divided into deciles and analysed in the same way as deciles of the proportions (see above). 
 
 ---
 
