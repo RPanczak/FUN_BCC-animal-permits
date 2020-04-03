@@ -2,10 +2,17 @@
 title: "Dog-SEP - preregistration"
 author: "Nina & Radek"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
-  html_document: default  
 # csl: apa.csl
 # bibliography: library.bib
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: yes
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
 editor_options: 
   chunk_output_type: console
 ---
