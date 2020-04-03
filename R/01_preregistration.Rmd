@@ -84,7 +84,7 @@ The `Dog ownership` dataset comes from the Brisbane City Council (BCC) [open dat
 
 ### Dog buying cost
 
-To access data on `expensive dog breeds in Australia`, we type these phrases into google. We selected the first two listings - [Australian Dog Lover](https://www.australiandoglover.com/2018/09/the-most-expensive-dog-breeds-in-2018.html), [lifestyle](https://www.lifestyle.com.au/pets/most-expensive-dogs.aspx) - on google. The information of *Australian Dog Lover* was based on [Pet Insurance Australia](https://www.petinsuranceaustralia.com.au/the-most-expensive-dog-breeds/). We manually extracted the `Dog buying cost` data from *lifestyle* and *Pet Insurance Australia* on the 28 March 2020. Lifestyle provided information about prices of the top 20 most expensive dog breeds, Pet Insurance Australia did so for the top 10. 
+To access data on `expensive dog breeds in Australia`, we typed these phrases into google. We selected the first two listings - [Australian Dog Lover](https://www.australiandoglover.com/2018/09/the-most-expensive-dog-breeds-in-2018.html) and [lifestyle](https://www.lifestyle.com.au/pets/most-expensive-dogs.aspx) - on google. The information of *Australian Dog Lover* was based on [Pet Insurance Australia](https://www.petinsuranceaustralia.com.au/the-most-expensive-dog-breeds/). We manually extracted the `Dog buying cost` data from *lifestyle* and *Pet Insurance Australia* on the 28 March 2020. Lifestyle provided information about prices of the top 20 most expensive dog breeds, Pet Insurance Australia did so for the top 10. 
 
 ### Dog insurance cost
 
