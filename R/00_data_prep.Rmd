@@ -108,7 +108,7 @@ glimpse(SEIFA)
 
 ```{r include=FALSE}
 ## Source 1
-dog_expensive_1 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
+dog_cost_1 <- read_xlsx("data/costs/raw/dog_cost.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
   # fill(web_source)
@@ -116,35 +116,35 @@ dog_expensive_1 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>%
   filter(source == "lifestyle") %>% 
   rename(dog_breed = breed)
 
-# View(dog_expensive_1)
+# View(dog_cost_1)
 
 ## Source 2
-dog_expensive_2 <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
+dog_cost_2 <- read_xlsx("data/costs/raw/dog_cost.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
   select(-web_source) %>% 
   filter(source == "pet insurance australia") %>% 
   rename(dog_breed = breed)
 
-# View(dog_expensive_2)
+# View(dog_cost_2)
 
 ## Combined
-dog_expensive <- 
-  select(dog_expensive_1, dog_breed) %>% 
-  bind_rows(select(dog_expensive_2, dog_breed)) %>% 
+dog_cost <- 
+  select(dog_cost_1, dog_breed) %>% 
+  bind_rows(select(dog_cost_2, dog_breed)) %>% 
   distinct() %>% 
   arrange(dog_breed)
 
-rm(dog_expensive_1, dog_expensive_2)
+rm(dog_cost_1, dog_cost_2)
 
-saveRDS(dog_expensive, "data/costs/clean/dog_expensive.Rds")
+saveRDS(dog_cost, "data/costs/clean/dog_cost.Rds")
 ```
 
 
 ```{r}
-dog_expensive <- readRDS("data/costs/clean/dog_expensive.Rds")
+dog_cost <- readRDS("data/costs/clean/dog_cost.Rds")
 
-kableExtra::kable(dog_expensive)
+kableExtra::kable(dog_cost)
 ```
 
 
