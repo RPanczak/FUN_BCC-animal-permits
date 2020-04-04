@@ -51,7 +51,7 @@ Schnyder, N.^1^ & Panczak, R.^2^
 
 ## Description/Background
 
-Australians love their dogs. Owning a dog might have psychological, social and physical benefits [Christian2013; Knight2008]. But buying and owning one can add up to large expenses. 
+Australians love their dogs. Owning a dog might have psychological, social and physical benefits [@Christian2013; @Knight2008]. But buying and owning one can add up to large expenses. 
 
 Tracking socioeconomic position (SEP) of people and neighbourhoods is not a trivial task and usually requires access to comprehensive and high quality data that are often sensitive in nature. In the absence of individual-level SEP measures (such as income, wealth and education) area based measures are often used. Such measures usually use one statistical variable or more to construct an index and use it to describe SEP of the area.
 
