@@ -218,3 +218,6 @@ Dog insurance data will be used to create share of all dogs in three categories 
 
 This preregistration document is been based on the [OSF Prereg](https://osf.io/zab38/wiki/home/) R Markdown template by James Bartlett [available here](https://github.com/BartlettJE/BartlettJE.github.io/blob/master/RMarkdown-scripts/OSF%20preregistration%20template.Rmd) incorporating parts of the template for secondary data preregistration by [Weston and colleagues](https://osf.io/x4gzt/), see also [here](https://osf.io/jqxfz/).
 
+---
+
+# References
