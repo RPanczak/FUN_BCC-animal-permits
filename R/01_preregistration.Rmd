@@ -7,7 +7,7 @@ csl: vancouver.csl
 output: 
   html_document: 
     highlight: pygments
-    keep_md: yes
+    keep_md: no
     number_sections: yes
     theme: united
     toc: yes
