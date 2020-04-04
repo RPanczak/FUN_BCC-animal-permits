@@ -1,8 +1,8 @@
 ---
 title: "Dog-SEP - preregistration"
 author: "Nina & Radek"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-csl: vancouver.csl
+date: "04 April, 2020"
+# csl: apa.csl
 # bibliography: library.bib
 output: 
   html_document: 
@@ -17,23 +17,9 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width=8, fig.height=6, dpi=300, out.width="800px", out.height="600px")
 
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-set.seed(12345)
-options(scipen = 999)
-```
 
-```{r, message=FALSE, warning=FALSE, include=FALSE}
-# packages
-library(tidyverse)
 
-# data
-dog_insurance <- readRDS("data/costs/clean/dog_insurance.Rds")
-dog_cost <- readRDS("data/costs/clean/dog_cost.Rds")
-
-```
 
 # Study Information
 
@@ -49,19 +35,19 @@ Schnyder, N.^1^ & Panczak, R.^2^
 
 ^2^ Wloki, Poland
 
-## Description/Background
+## Description/Background (detailed)
 
-Australians love their dogs. Owning a dog might have psychological, social and physical benefits [Christian2013; Knight2008]. But buying and owning one can add up to large expenses. 
+Australians love their dogs. Despite the fact that buying and owning one can add up to large expenses. 
 
-Tracking socioeconomic position (SEP) of people and neighbourhoods is not a trivial task and usually requires access to comprehensive and high quality data that are often sensitive in nature. In the absence of individual-level SEP measures (such as income, wealth and education) area based measures are often used. Such measures usually use one statistical variable or more to construct an index and use it to describe SEP of the area.
+Tracking socioeconomic position (SEP) of people and neighbourhoods is not a trivial task and usually requires access to comprehensive and high quality data that are often sensitive in nature. In the absence of individual-level SEP measures (such as income, wealth and education) area based measures are often used. Such measures usually use one statistical variable or use more to construct an index and use it to describe SEP of the area.
 
 Census variables have been widely used for this purpose with more recent attempts leaning towards more exotic measures derived from night-time lights, mobile phones or car registrations to name few.
 
 ## Research Questions and Hypotheses
 
-We will attempt to answer the question if the dog breed ownership data can be used as proxy for SEP of suburbs using the city of Brisbane, Australia, as an example.
+We will attempt to answer the question if the dog breed ownership data can be used as proxy for SEP of suburbs using the city of Brisbane, Australia as an example.
 
-We assume that the cost of buying and maintaining a dog is a proxy for socioeconomic position of the owner. We hypothesize that the aggregated dog ownership data to the neighbourhhood level will closely reflect the traditional indices of SEP. 
+We assume that the cost of buying and maintaining the dog is a proxy for socioeconomic position of the owner. We hypothesize that the aggregated dog ownership data to the neighbourhhood level will closely reflect the traditional indices of SEP. 
 
 ---
 
@@ -91,7 +77,7 @@ Not applicable.
 
 ### Dog ownership
 
-The `Dog ownership` dataset comes from the Brisbane City Council (BCC) [open data portal](https://www.data.brisbane.qld.gov.au/data/dataset/current-animal-related-permits/resource/c2823090-8a44-4c8b-9ed4-e988491b25f4). We will use the `CARS - BIS - Open Data - Animal Permits Breed - 1 Jul 2019.csv` dataset that is closest in time to the `SEIFA` dataset. BBC's data portal does not provide earlier version of their data. Unfortunately, our attempts to contact BCC and obtain earlier version were not successful. In case the earlier dataset becomes available we will use that instead.
+The `Dog ownership` dataset comes from the Brisbane City Council (BCC) [open data portal](https://www.data.brisbane.qld.gov.au/data/dataset/current-animal-related-permits/resource/c2823090-8a44-4c8b-9ed4-e988491b25f4). We will use `CARS - BIS - Open Data - Animal Permits Breed - 1 Jul 2019.csv` dataset that is closest in time to the `SEIFA` dataset. BBC's data portal does not provide earlier version of their data. Unfortunately, our attempts to contact BCC and obtain earlier version were not successful. In case the earlier dataset becomes available we will use that instead.
 
 ### Dog buying cost
 
@@ -99,7 +85,7 @@ To access data on `expensive dog breeds in Australia`, we typed these phrases in
 
 ### Dog insurance cost
 
-We scraped the `Dog insurance cost` dataset from the Australian [Top 10 Pet Insurance](https://top10petinsurance.com.au/pet-insurance-prices/) website on the 30 March 2020. It provides insurance cost for the `r length(unique(dog_insurance$"Dog Breed"))` most popular dog breeds in Australia. Insurance costs are based on a 1-year-old male, desexed dog with a 24-year-old owner living in Sydney (postcode 2010), Australia. The data lists the average cost of six Australian pet insurance providers separately for a comprehensive, an accident and an illness pet insurance with zero excess as of June 2017. 
+We scraped the `Dog insurance cost` dataset from the Australian [Top 10 Pet Insurance](https://top10petinsurance.com.au/pet-insurance-prices/) website on the 30 March 2020. It provides insurance cost for the 0 most popular dog breeds in Australia. Insurance costs are based on a 1-year-old male, desexed dog with a 24-year-old owner living in Sydney (postcode 2010), Australia. The data lists the average cost of six Australian pet insurance providers separately for a comprehensive, an accident and an illness pet insurance with zero excess as of June 2017. 
 
 ### SEIFA
 
