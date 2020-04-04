@@ -41,6 +41,28 @@ tmap_mode("view") # makes map interactive
 
 # Neighbourhood boundaries
 
+## BCC suburbs
+
+```{r eval=FALSE, include=FALSE}
+SUB <- read_csv("data/geo/raw/suburb-and-adjoining-suburb-november-2019.zip") %>% 
+  clean_names() %>%
+  remove_empty(c("rows", "cols")) %>% 
+  select(suburb_name) %>% 
+  rename(SSC_NAME16 = suburb_name) %>%  
+  distinct() %>% 
+  mutate(SSC_NAME16 = str_to_title(SSC_NAME16)) %>% 
+  arrange(SSC_NAME16)
+
+saveRDS(SUB, "data/geo/clean/SUB.Rds")
+```
+
+```{r}
+SUB <- readRDS("data/geo/clean/SUB.Rds") %>% 
+  mutate(exist = 1)
+
+glimpse(SUB)
+```
+
 ## ABS
 
 ```{r eval=FALSE, include=FALSE}
@@ -49,11 +71,36 @@ SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
   mutate(SSC_CODE16 = as.integer(SSC_CODE16)) %>% 
   select(-STE_NAME16, -STE_CODE16, -AREASQKM16) %>% 	
   st_transform(3112) %>% 	
-  filter(!st_is_empty(geometry))
+  filter(!st_is_empty(geometry)) %>% 
+  mutate(SSC_NAME16 = str_remove(SSC_NAME16, 
+                                 fixed(" (Brisbane - Qld)"))) %>% 
+  mutate(SSC_NAME16 = str_remove(SSC_NAME16, 
+                                 fixed(" (Qld)"))) %>% 
+  mutate(SSC_NAME16 = ifelse(SSC_NAME16 == "McDowall",
+                             "Mcdowall", SSC_NAME16)) %>% 
+  mutate(SSC_NAME16 = ifelse(SSC_NAME16 == "Mount Coot-tha",
+                             "Mount Coot-Tha", SSC_NAME16))
+
+# what is??? Stones Corner
 
 # SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
 
 saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
+```
+
+```{r}
+SSC <- readRDS("data/geo/SSC_2016_AUST.Rds")
+
+test <- SUB %>% 
+  left_join(SSC) %>% 
+  select(-geometry)
+
+test <- SSC %>% 
+  right_join(SUB) %>% 
+  st_drop_geometry()
+
+plot(st_geometry(test))
+
 ```
 
 ## QSC
@@ -67,6 +114,8 @@ LB <- st_read("data/geo/raw/QSC_Extracted_Data_20190816_111155192000-13108/Local
   filter(!st_is_empty(geometry))	
 
 # LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
+
+plot(st_geometry(LB))
 
 saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
 ```
