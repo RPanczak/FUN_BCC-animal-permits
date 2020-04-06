@@ -209,13 +209,16 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
                   sheet = "Table 1", skip = 5, n_max = 13719, na = "-") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
-  select(-starts_with("score_")) %>% 
   dplyr::rename(SSC_CODE16 = x1,
                 SSC_NAME16 = x2,
-                IRSD = decile_4,
-                IRSAD = decile_6,
-                IER = decile_8,
-                IEO = decile_10,
+                IRSD = score_3,
+                IRSD_d = decile_4,
+                IRSAD = score_5,
+                IRSAD_d = decile_6,
+                IER = score_7,
+                IER_d = decile_8,
+                IEO = score_9,
+                IEO_d = decile_10,
                 URP = x11,
                 caution = x12) %>% 
   mutate(SSC_CODE16 = as.integer(SSC_CODE16),
@@ -223,6 +226,10 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
          IRSAD = as.integer(IRSAD),
          IER = as.integer(IER),
          IEO = as.integer(IEO),
+         IRSD_d = as.integer(IRSD_d),
+         IRSAD_d = as.integer(IRSAD_d),
+         IER_d = as.integer(IER_d),
+         IEO_d = as.integer(IEO_d),
          URP = as.integer(URP)
   ) %>% 
   mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
