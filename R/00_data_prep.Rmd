@@ -57,6 +57,8 @@ SUB <- read_csv("data/geo/raw/suburb-and-adjoining-suburb-november-2019.zip") %>
 saveRDS(SUB, "data/geo/clean/SUB.Rds")
 ```
 
+Full (?) list of Brisbane suburbs. 
+
 ```{r}
 SUB <- readRDS("data/geo/clean/SUB.Rds")
 
@@ -64,6 +66,16 @@ SUB <- readRDS("data/geo/clean/SUB.Rds")
 
 SUB %>% 
   slice(1:5) %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+This might very well include areas with no pops (and therefore no SEIFA).
+
+```{r}
+SUB %>% 
+  filter(str_detect(SSC_NAME16, 
+                    regex("port", ignore_case = TRUE))) %>% 
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
@@ -136,26 +148,25 @@ qtm(SSC, fill = NULL, borders = "darkorchid4",
 ```{r eval=FALSE, include=FALSE}
 ## QSC
 # data not needed at the moment
-# Stones Creek exist
-# Also a 'suburb' of Moreton Bay?
 
 LB <- st_read("data/geo/raw/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
               stringsAsFactors = FALSE) %>% 
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
   mutate(LOC_CODE = as.integer(LOC_CODE)) %>% 
-  st_transform(3112) %>% 	
-  filter(!st_is_empty(geometry)) %>% 
-  filter(LGA == "Brisbane City") %>% 
-  select(-LGA)
+  filter(!st_is_empty(geometry)) %>%
+  filter(LGA == "Brisbane City") %>%
+  select(-LGA) %>%
+  # st_drop_geometry() %>% 
+  st_transform(3112)
 
 # LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
+
+saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
 
 plot(st_geometry(LB))
 
 qtm(LB, fill = NULL, borders = "darkorchid4", 
     text ="LOCALITY", text.col = "darkorchid4")
-
-saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
 
 test <- LB %>% 
   st_drop_geometry() %>% 
@@ -165,8 +176,29 @@ test <- LB %>%
 test <- LB %>% 
   st_drop_geometry() %>% 
   left_join(SUB %>% mutate(exist = 1), 
-             by = c("LOCALITY" = "SSC_NAME16"))
+            by = c("LOCALITY" = "SSC_NAME16"))
 
+# Three changes with capital letter problems
+LB %<>% 
+  mutate(LOCALITY = ifelse(LOCALITY == "MacGregor",
+                           "Macgregor", LOCALITY)) %>%
+  mutate(LOCALITY = ifelse(LOCALITY == "McDowall",
+                           "Mcdowall", LOCALITY)) %>%
+  mutate(LOCALITY = ifelse(LOCALITY == "Mount Coot-tha",
+                           "Mount Coot-Tha", LOCALITY))
+
+# Now one extra 'suburb' of Moreton Bay
+LB %>% 
+  st_drop_geometry() %>% 
+  left_join(SUB %>% mutate(exist = 1), 
+            by = c("LOCALITY" = "SSC_NAME16")) %>% 
+  filter(is.na(exist)) %>% 
+  select(LOCALITY)
+
+# And one extra Stones Creek 
+LB %>% 
+  st_drop_geometry() %>% 
+  filter(LOCALITY == "Stones Corner")
 ```
 
 
@@ -201,9 +233,23 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 ```{r}
 SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
 
-glimpse(SEIFA)
+frq(SEIFA$IRSD)
 
-# frq(SEIFA, IRSD)
+SEIFA %>% 
+  ggplot(aes(x = IRSD)) + geom_bar() 
+
+SSC %<>% 
+  left_join(SEIFA, by = c("SSC_CODE16", "SSC_CODE16"))
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  glimpse()
+
+frq(SSC$IRSD)
+
+SSC %>% 
+  ggplot(aes(x = IRSD)) + geom_bar() 
+
 ```
 
 # Dog cost 
