@@ -132,6 +132,8 @@ SUB %>%
   filter(is.na(SSC_CODE16))
 ```
 
+Full map
+
 ```{r}
 SSC %<>% 
   right_join(SUB) %>%
@@ -201,7 +203,6 @@ LB %>%
   filter(LOCALITY == "Stones Corner")
 ```
 
-
 # SEIFA
 
 ```{r}
@@ -237,26 +238,130 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
 saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 ```
 
+## Coverage
+
+Data for Australia, example of IRSD.
+
 ```{r}
 SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds")
 
-frq(SEIFA$IRSD)
+frq(SEIFA$IRSD_d)
 
 SEIFA %>% 
-  ggplot(aes(x = IRSD)) + geom_bar() 
+  ggplot(aes(x = IRSD_d)) + 
+  geom_bar() 
 
+SEIFA %>% 
+  ggplot(aes(x = as.factor(IRSD_d), y = IRSD)) + 
+  geom_boxplot(varwidth = TRUE) 
+```
+
+Brisbane suburbs only 
+
+```{r}
 SSC %<>% 
-  left_join(SEIFA, by = c("SSC_CODE16", "SSC_CODE16"))
+  left_join(SEIFA, by = c("SSC_CODE16", "SSC_CODE16")) %>% 
+  select(-SSC_NAME16.y) %>% 
+  rename(SSC_NAME16 = SSC_NAME16.x)
+
+# SSC %>% 
+#   st_drop_geometry() %>% 
+#   glimpse()
+
+frq(SSC$IRSD_d)
+
+SSC %>% 
+  ggplot(aes(x = IRSD_d)) + 
+  geom_bar() 
+
+SSC %>% 
+  filter(!is.na(IRSD_d)) %>% 
+  ggplot(aes(x = as.factor(IRSD_d), y = IRSD)) + 
+  geom_boxplot(varwidth = TRUE) 
+```
+
+## Missing
+
+Few areas with missing SEIFA
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  filter_at(vars(ends_with("_d")), any_vars(is.na(.))) %>%   select(SSC_NAME16, ends_with("_d"), URP)
+```
+
+These were excluded.
+
+```{r}
+SSC %<>% 
+  filter_at(vars(ends_with("_d")), all_vars(!is.na(.))) 
+```
+
+## Caution
+
+Few cases with ABS flag `caution`.
+
+```{r}
+frq(SSC$caution)
+```
+
+Usually with very small pop numbers.
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(caution) %>% 
+  summarise(mean = mean(URP),
+            min = min(URP),
+            max = max(URP))
+```
+
+Apart Lake Manchester.
+
+## 'Local' deciles
+
+```{r}
+SSC %<>% 
+  mutate(IRSD_d_orig = IRSD_d) %>% 
+  mutate(IRSD_d = ntile(IRSD, 10)) %>%
+  mutate(IRSAD_d_orig = IRSAD_d) %>% 
+  mutate(IRSAD_d = ntile(IRSAD, 10)) %>%
+  mutate(IER_d_orig = IER_d) %>% 
+  mutate(IER_d = ntile(IER, 10)) %>%
+  mutate(IEO_d_orig = IEO_d) %>% 
+  mutate(IEO_d = ntile(IEO, 10))
+
+# frq(SSC$IRSD_d_orig)
+# frq(SSC$IRSD_d)
 
 SSC %>% 
   st_drop_geometry() %>% 
-  glimpse()
+  tabyl(IRSD_d_orig, IRSD_d)
 
-frq(SSC$IRSD)
+# frq(SSC$IRSAD_d)
 
 SSC %>% 
-  ggplot(aes(x = IRSD)) + geom_bar() 
+  st_drop_geometry() %>% 
+  tabyl(IRSAD_d_orig, IRSAD_d)
 
+# frq(SSC$IER_d)
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  tabyl(IER_d_orig, IER_d)
+
+# frq(SSC$IEO_d)
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  tabyl(IEO_d_orig, IEO_d)
+```
+
+```{r}
+tm_shape(SSC) +
+  tm_polygons(col = "IRSD_d", n = 10, palette = "div",
+              id = "SSC_NAME16", 
+              popup.vars = c("SSC_NAME16", "IRSD_d", "IRSD"))
 ```
 
 # Dog cost 
@@ -350,7 +455,7 @@ saveRDS(dog_insurance, "data/costs/clean/dog_insurance.Rds") # extracted on the 
 dog_insurance <- readRDS("data/costs/clean/dog_insurance.Rds")
 ```
 
-## Thre major categories
+## Three major categories
 
 ```{r}
 dog_insurance %>% 
