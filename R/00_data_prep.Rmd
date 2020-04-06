@@ -27,7 +27,8 @@ set.seed(12345)
 options(scipen = 999)
 
 library(pacman) 
-p_load(tidyverse, readxl, janitor, lubridate, sjmisc,
+p_load(tidyverse, readxl, magrittr,
+       janitor, sjmisc, kableExtra,
        sf, tmap, rmapshaper)
 
 tmap_mode("view") # makes map interactive
@@ -57,13 +58,21 @@ saveRDS(SUB, "data/geo/clean/SUB.Rds")
 ```
 
 ```{r}
-SUB <- readRDS("data/geo/clean/SUB.Rds") %>% 
-  mutate(exist = 1)
+SUB <- readRDS("data/geo/clean/SUB.Rds")
 
-glimpse(SUB)
+# glimpse(SUB)
+
+SUB %>% 
+  slice(1:5) %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ## ABS
+
+Names from Brisbane containing `(Brisbane - Qld)`, names from Qld containing `(Qld)` have to cleaned to match BCC data.
+
+`McDowall` is called `McDowall` and `Mount Coot-tha` is `Mount Coot-Tha`.
 
 ```{r eval=FALSE, include=FALSE}
 SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
@@ -72,6 +81,7 @@ SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
   select(-STE_NAME16, -STE_CODE16, -AREASQKM16) %>% 	
   st_transform(3112) %>% 	
   filter(!st_is_empty(geometry)) %>% 
+  mutate(SSC_NAME16_orig = SSC_NAME16) %>%  
   mutate(SSC_NAME16 = str_remove(SSC_NAME16, 
                                  fixed(" (Brisbane - Qld)"))) %>% 
   mutate(SSC_NAME16 = str_remove(SSC_NAME16, 
@@ -81,8 +91,6 @@ SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
   mutate(SSC_NAME16 = ifelse(SSC_NAME16 == "Mount Coot-tha",
                              "Mount Coot-Tha", SSC_NAME16))
 
-# what is??? Stones Corner
-
 # SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
 
 saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
@@ -90,18 +98,40 @@ saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
 
 ```{r}
 SSC <- readRDS("data/geo/SSC_2016_AUST.Rds")
-
-test <- SUB %>% 
-  left_join(SSC) %>% 
-  select(-geometry)
-
-test <- SSC %>% 
-  right_join(SUB) %>% 
-  st_drop_geometry()
-
-plot(st_geometry(test))
-
 ```
+
+Areas without matches using original names
+
+```{r}
+SUB %>% 
+  left_join(SSC, by = c("SSC_NAME16" = "SSC_NAME16")) %>% 
+  select(-geometry) %>% 
+  filter(SSC_NAME16 != SSC_NAME16_orig) %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+`Stones Corner` doesn't exist in ABS but it does in BCC. It seems it's part of [`Greenslopes`](https://quickstats.censusdata.abs.gov.au/census_services/getproduct/census/2016/quickstat/SSC31254?opendocument).
+
+```{r}
+SUB %>% 
+  left_join(SSC) %>% 
+  select(-geometry) %>% 
+  filter(is.na(SSC_CODE16))
+```
+
+```{r}
+SSC %<>% 
+  right_join(SUB) %>%
+  filter(SSC_NAME16 != "Stones Corner")
+
+# SSC %>% 
+#   plot(max.plot = 1)
+
+qtm(SSC, fill = NULL, borders = "darkorchid4", 
+    text ="SSC_NAME16", text.col = "darkorchid4")
+```
+
 
 ## QSC
 
