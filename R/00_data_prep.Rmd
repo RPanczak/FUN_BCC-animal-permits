@@ -133,21 +133,40 @@ qtm(SSC, fill = NULL, borders = "darkorchid4",
 ```
 
 
-## QSC
-
 ```{r eval=FALSE, include=FALSE}
+## QSC
+# data not needed at the moment
+# Stones Creek exist
+# Also a 'suburb' of Moreton Bay?
+
 LB <- st_read("data/geo/raw/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
               stringsAsFactors = FALSE) %>% 
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
   mutate(LOC_CODE = as.integer(LOC_CODE)) %>% 
   st_transform(3112) %>% 	
-  filter(!st_is_empty(geometry))	
+  filter(!st_is_empty(geometry)) %>% 
+  filter(LGA == "Brisbane City") %>% 
+  select(-LGA)
 
 # LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
 
 plot(st_geometry(LB))
 
+qtm(LB, fill = NULL, borders = "darkorchid4", 
+    text ="LOCALITY", text.col = "darkorchid4")
+
 saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
+
+test <- LB %>% 
+  st_drop_geometry() %>% 
+  left_join(SSC, by = c("LOCALITY" = "SSC_NAME16")) %>% 
+  select(-geometry)
+
+test <- LB %>% 
+  st_drop_geometry() %>% 
+  left_join(SUB %>% mutate(exist = 1), 
+             by = c("LOCALITY" = "SSC_NAME16"))
+
 ```
 
 
