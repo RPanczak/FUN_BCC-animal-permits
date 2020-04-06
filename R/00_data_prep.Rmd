@@ -1,5 +1,5 @@
 ---
-title: "BCC animal data"
+title: "Dog-SEP"
 subtitle: "Data preps"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -16,7 +16,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-<!-- ------------------------------------------------------------ --> 
 <!-- ------------------------------------------------------------ --> 
 
 ```{r setup, include=FALSE}
@@ -39,6 +38,8 @@ tmap_mode("view") # makes map interactive
 #   conflicted::conflict_prefer(f, "tidylog", quiet = TRUE)
 # }
 ```
+
+<!-- ------------------------------------------------------------ --> 
 
 # Neighbourhood boundaries
 
@@ -203,6 +204,8 @@ LB %>%
   filter(LOCALITY == "Stones Corner")
 ```
 
+<!-- ------------------------------------------------------------ --> 
+
 # SEIFA
 
 ```{r}
@@ -364,6 +367,8 @@ tm_shape(SSC) +
               popup.vars = c("SSC_NAME16", "IRSD_d", "IRSD"))
 ```
 
+<!-- ------------------------------------------------------------ --> 
+
 # Dog cost 
 
 ```{r include=FALSE}
@@ -388,6 +393,7 @@ dog_cost <- readRDS("data/costs/clean/dog_cost.Rds")
 kableExtra::kable(dog_cost)
 ```
 
+<!-- ------------------------------------------------------------ --> 
 
 # Dog insurance
 
@@ -470,3 +476,7 @@ dog_insurance %>%
   select(dog_breed, cost_compared_to_other_breeds) %>% 
   kableExtra::kable()
 ```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Dog ownership 
