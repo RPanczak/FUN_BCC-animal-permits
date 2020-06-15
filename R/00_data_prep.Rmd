@@ -32,7 +32,7 @@ p_load(tidyverse, readxl, magrittr, scales,
 
 tmap_mode("view") # makes map interactive
 
-# library("tidylog")
+library("tidylog")
 # library("conflicted")
 # for (f in getNamespaceExports("tidylog")) {
 #   conflicted::conflict_prefer(f, "tidylog", quiet = TRUE)
@@ -542,3 +542,47 @@ dog_ownership <- readRDS("data/permits/clean/dog_ownership.Rds")
 ```
 
 `r comma(nrow(dog_ownership))` records after exclusions
+
+## Data merging 
+
+Merge data of `dog_cost` and `dog_ownership`, and `dog_insurance` and `dog_ownership`, respectively. Aim: dog breeds should have same name in all data sets.
+
+```{r}
+
+# rename dog_ownership dog names to match dog_cost names
+table(dog_ownership$dog_breed)
+
+dog_ownership <- dog_ownership %>%
+  mutate(
+    dog_breed = case_when(
+      dog_breed == "Akita (Japanese)" ~ "Akita",
+      dog_breed == "Dogue de Bordeaux" ~ "French Mastiff",
+      dog_breed == "British Bulldog" ~ "English Bulldog",
+      dog_breed == "Bulldog" ~ "English Bulldog",
+      dog_breed == "German Shepherd Dog (Long Stock Coat)" ~ "German Shepherd",
+      dog_breed == "German Shepherd Dog" ~ "German Shepherd",
+      dog_breed == "Chinese Crested Dog" ~ "Hairless Chinese Crested",
+      dog_breed == "St Bernard" ~ "Saint Bernard",
+      TRUE ~ as.character(dog_breed)))
+
+# binary indicator "expensive" and "non-expensive" dog breeds according to dog_cost
+dog_cost$expensive <- "yes"
+
+dog_ownership_cost <- left_join(dog_ownership, dog_cost, by = "dog_breed")
+
+dog_ownership_cost <- dog_ownership_cost %>% 
+  mutate(
+    expensive = case_when(
+      is.na(expensive) ~ "no",
+      expensive == "yes" ~ "yes"
+    )
+  )
+
+# rename dog_insurance names to match dog_cost names.
+
+# rename dog_ownership names to match dog_insurance dog names. 
+
+```
+
+
+
