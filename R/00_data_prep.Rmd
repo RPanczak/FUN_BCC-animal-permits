@@ -27,12 +27,12 @@ options(scipen = 999)
 
 library(pacman) 
 p_load(tidyverse, readxl, magrittr, scales,
-       janitor, sjmisc, kableExtra,
+       janitor, sjmisc, sjPlot, kableExtra,
        sf, tmap, rmapshaper)
 
 tmap_mode("view") # makes map interactive
 
-library("tidylog")
+# library("tidylog")
 # library("conflicted")
 # for (f in getNamespaceExports("tidylog")) {
 #   conflicted::conflict_prefer(f, "tidylog", quiet = TRUE)
@@ -243,7 +243,7 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 
 ## Coverage
 
-Data for Australia, example of IRSD.
+### Data for Australia, example of IRSD.
 
 ```{r}
 SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds") %>% 
@@ -260,7 +260,7 @@ SEIFA %>%
   geom_boxplot(varwidth = TRUE) 
 ```
 
-Brisbane suburbs only 
+### Brisbane suburbs only 
 
 ```{r}
 SSC %<>% 
@@ -327,6 +327,8 @@ SSC %>%
 
 ## 'Local' deciles
 
+Original values of indices were used to calculate 'local deciles' using SSCs for Brisbane only
+
 ```{r}
 SSC %<>% 
   mutate(IRSD_d_orig = IRSD_d) %>% 
@@ -337,34 +339,31 @@ SSC %<>%
   mutate(IER_d = ntile(IER, 10)) %>%
   mutate(IEO_d_orig = IEO_d) %>% 
   mutate(IEO_d = ntile(IEO, 10))
+```
 
+### `IRSD_d` 
+
+```{r}
 # frq(SSC$IRSD_d_orig)
 # frq(SSC$IRSD_d)
 
 SSC %>% 
   st_drop_geometry() %>% 
   tabyl(IRSD_d_orig, IRSD_d)
-
-# frq(SSC$IRSAD_d)
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  tabyl(IRSAD_d_orig, IRSAD_d)
-
-# frq(SSC$IER_d)
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  tabyl(IER_d_orig, IER_d)
-
-# frq(SSC$IEO_d)
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  tabyl(IEO_d_orig, IEO_d)
 ```
 
-Example of `IRSD_d` 
+```{r}
+plot_xtab(SSC$IRSD_d, SSC$IRSD_d_orig, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(SSC$IRSD_d, SSC$IRSD_d_orig)
+assocplot(tabz,
+          xlab = "IRSD_d", ylab = "IRSD_d_orig")
+mosaicplot(tabz,
+           xlab = "IRSD_d", ylab = "IRSD_d_orig")
+
+```
 
 ```{r}
 tm_shape(SSC) +
@@ -373,6 +372,98 @@ tm_shape(SSC) +
               popup.vars = c("SSC_NAME16", "IRSD_d", "IRSD"))
 ```
 
+### `IRSAD_d` 
+
+```{r}
+# frq(SSC$IRSAD_d_orig)
+# frq(SSC$IRSAD_d)
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  tabyl(IRSAD_d_orig, IRSAD_d)
+```
+
+```{r}
+plot_xtab(SSC$IRSAD_d, SSC$IRSAD_d_orig, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(SSC$IRSAD_d, SSC$IRSAD_d_orig)
+assocplot(tabz,
+          xlab = "IRSAD_d", ylab = "IRSAD_d_orig")
+mosaicplot(tabz,
+           xlab = "IRSAD_d", ylab = "IRSAD_d_orig")
+
+```
+
+```{r}
+tm_shape(SSC) +
+  tm_polygons(col = "IRSAD_d", n = 10, palette = "div",
+              id = "SSC_NAME16", 
+              popup.vars = c("SSC_NAME16", "IRSAD_d", "IRSAD"))
+```
+
+### `IER_d` 
+
+```{r}
+# frq(SSC$IER_d_orig)
+# frq(SSC$IER_d)
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  tabyl(IER_d_orig, IER_d)
+```
+
+```{r}
+plot_xtab(SSC$IER_d, SSC$IER_d_orig, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(SSC$IER_d, SSC$IER_d_orig)
+assocplot(tabz,
+          xlab = "IER_d", ylab = "IER_d_orig")
+mosaicplot(tabz,
+           xlab = "IER_d", ylab = "IER_d_orig")
+
+```
+
+```{r}
+tm_shape(SSC) +
+  tm_polygons(col = "IER_d", n = 10, palette = "div",
+              id = "SSC_NAME16", 
+              popup.vars = c("SSC_NAME16", "IER_d", "IER"))
+```
+
+### `IEO_d` 
+
+```{r}
+# frq(SSC$IEO_d_orig)
+# frq(SSC$IEO_d)
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  tabyl(IEO_d_orig, IEO_d)
+```
+
+```{r}
+plot_xtab(SSC$IEO_d, SSC$IEO_d_orig, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(SSC$IEO_d, SSC$IEO_d_orig)
+assocplot(tabz,
+          xlab = "IEO_d", ylab = "IEO_d_orig")
+mosaicplot(tabz,
+           xlab = "IEO_d", ylab = "IEO_d_orig")
+
+```
+
+```{r}
+tm_shape(SSC) +
+  tm_polygons(col = "IEO_d", n = 10, palette = "div",
+              id = "SSC_NAME16", 
+              popup.vars = c("SSC_NAME16", "IEO_d", "IEO"))
+```
 <!-- ------------------------------------------------------------ --> 
 
 # Dog cost 
