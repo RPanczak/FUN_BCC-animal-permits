@@ -577,7 +577,28 @@ dog_ownership_cost <- dog_ownership_cost %>%
       expensive == "yes" ~ 1
     )
   )
+```
 
+```{r}
+saveRDS(dog_ownership_cost, "data/permits/clean/dog_ownership_cost.Rds") 
+```
+
+```{r}
+dog_ownership_cost <- readRDS("data/permits/clean/dog_ownership_cost.Rds") 
+```
+
+```{r}
+# graph expensive dogs
+
+dog_ownership_cost %>% 
+  mutate(dog_breed = fct_lump(dog_breed, n = 50)) %>%
+  ggplot(aes(x = dog_breed, fill = expensive)) + 
+  geom_bar() +
+  coord_flip()
+
+```
+
+```{r}
 # rename dog_insurance names to match dog_cost names.
 
 # rename dog_ownership names to match dog_insurance dog names. 
