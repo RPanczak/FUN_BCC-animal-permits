@@ -2,9 +2,9 @@
 
 Analyses of BCC data - animal permits & complaints
 
-[Preregistration](https://osf.io/8rhjn)
-
 [OSF project](https://osf.io/c2gyw/)
+
+[Preregistration - breeds & SEIFA](https://osf.io/8rhjn)
 
 Data 
   - BCC data 
