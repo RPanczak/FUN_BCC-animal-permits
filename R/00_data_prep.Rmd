@@ -26,7 +26,7 @@ set.seed(12345)
 options(scipen = 999)
 
 library(pacman) 
-p_load(tidyverse, readxl, magrittr,
+p_load(tidyverse, readxl, magrittr, scales,
        janitor, sjmisc, kableExtra,
        sf, tmap, rmapshaper)
 
@@ -85,7 +85,7 @@ SUB %>%
 
 Names from Brisbane containing `(Brisbane - Qld)`, names from Qld containing `(Qld)` have to cleaned to match BCC data.
 
-`McDowall` is called `McDowall` and `Mount Coot-tha` is `Mount Coot-Tha`.
+`Mcdowall` is called `McDowall` and `Mount Coot-tha` is `Mount Coot-Tha`.
 
 ```{r eval=FALSE, include=FALSE}
 SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
@@ -489,3 +489,56 @@ dog_insurance %>%
 
 # Dog ownership in Brisbane
 
+```{r}
+dog_ownership <- read_csv("data/permits/raw/cars-bis-open-data-animal-permits-3-jan-2019.zip")
+```
+
+Raw dataset consists of `r comma(nrow(dog_ownership))`
+
+## Data selection 
+
+Excluding records with `permit_name` *Breeders Permit*,	*Cattery Permit*, *Racehorses Permit* & *Pet Shop Permit*, *Domestic Dog Permit* & *Guard Dog Permit*.
+
+Excluding records without neighbourhood.
+
+Excluding records without `dog_breed` values.
+
+*Stones Corner* values were assigned to *Greenslopes* SSC (see above).
+
+```{r}
+dog_ownership %<>% 
+  clean_names() %>%
+  remove_empty(c("rows", "cols")) %>% 
+  select(-permit_group, -permit_status) %>% # all the same here
+  filter(!permit_name %in% c("Breeders Permit",	"Cattery Permit", "Racehorses Permit", "Pet Shop Permit")) %>% 
+  filter(!permit_name %in% c("Domestic Dog Permit", "Guard Dog Permit")) %>%
+  rename(dog_breed = animal_breed,
+         SSC_NAME16 = application_location_suburb) %>% 
+  mutate(SSC_NAME16 = str_to_title(SSC_NAME16)) %>% 
+  mutate(SSC_NAME16 = ifelse(SSC_NAME16 == "Stones Corner", "Greenslopes", SSC_NAME16)) %>% 
+    filter(!is.na(SSC_NAME16)) %>% 
+    filter(!is.na(dog_breed))
+```
+
+```{r eval=FALSE, include=FALSE}
+# checking domestic dogs
+dog_ownership %>% 
+  filter(permit_name %in% c("Domestic Dog Permit")) %>%
+  frq(SSC_NAME16)
+
+test <- dog_ownership %>% 
+  mutate(ind = ifelse(permit_name == "Domestic Dog Permit", 1, 0)) %>% 
+  group_by(SSC_NAME16) %>% 
+  summarise(ind = sum(ind), total = n()) %>% 
+  mutate(perc = (ind/total)*100)
+```
+
+```{r}
+saveRDS(dog_ownership, "data/permits/clean/dog_ownership.Rds") 
+```
+
+```{r}
+dog_ownership <- readRDS("data/permits/clean/dog_ownership.Rds") 
+```
+
+`r comma(nrow(dog_ownership))` records after exclusions
