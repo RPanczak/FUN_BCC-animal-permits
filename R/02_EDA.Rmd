@@ -1,0 +1,207 @@
+---
+title: "Dog-SEP"
+subtitle: "EDA"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: no
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- ------------------------------------------------------------ --> 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width=8, fig.height=6, dpi=300, out.width="800px", out.height="600px")
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+set.seed(12345)
+options(scipen = 999)
+
+library(pacman) 
+p_load(tidyverse, readxl, magrittr, scales,
+       janitor, sjmisc, kableExtra,
+       sf, tmap, rmapshaper)
+
+tmap_mode("view") # makes map interactive
+
+# library("tidylog")
+# library("conflicted")
+# for (f in getNamespaceExports("tidylog")) {
+#   conflicted::conflict_prefer(f, "tidylog", quiet = TRUE)
+# }
+```
+
+```{r}
+dog_ownership_cost <- readRDS("data/permits/clean/dog_ownership_cost.Rds") 
+
+SSC <- readRDS("data/geo/clean/SSC.Rds")
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# All Brisbane dogs combined 
+
+```{r}
+dog_ownership_cost %>% 
+  mutate(expensive = as_factor(expensive)) %>% 
+  mutate(dog_breed = fct_lump(dog_breed, n = 50)) %>%
+  group_by(dog_breed) %>% 
+  mutate(total = n()) %>% 
+  group_by(dog_breed, expensive) %>% 
+  summarise(count = n(),
+            total = first(total)) %>% 
+  ggplot(aes(x = reorder(dog_breed, total) , 
+             y = count,
+             fill = expensive)) + 
+  geom_col() +
+  coord_flip() +
+  ylab("Number of dogs") + xlab("")
+```
+
+
+# All dogs per capita
+
+```{r}
+dog_ownership_agg <- dog_ownership_cost %>% 
+  group_by(SSC_NAME16) %>% 
+  summarise(dogs_total = n(),
+            dogs_exp = sum(expensive))
+
+SSC %<>% 
+  left_join(dog_ownership_agg)
+```
+
+Areas with no URP/SEIFA but having (small amount of) dogs:
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  right_join(dog_ownership_agg) %>% 
+  filter(is.na(SSC_CODE16)) %>% 
+  select(SSC_NAME16, dogs_total)
+```
+
+
+Area with low URP and no dogs at all:
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  left_join(dog_ownership_agg) %>% 
+  filter(is.na(dogs_total)) %>% 
+  select(SSC_NAME16, dogs_total, URP)
+```
+
+Dogs per capita:
+
+```{r}
+SSC %<>% 
+  left_join(dog_ownership_agg) %>%
+  filter(!is.na(dogs_total)) %>%
+  mutate(dogs_percap = (dogs_total / URP)*1000,
+         dogs_exp_prop = dogs_exp / dogs_total)
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  arrange(desc(dogs_percap)) %>% 
+  select(SSC_NAME16, dogs_total, URP, dogs_percap) %>% 
+  slice(1:10)
+
+tm_shape(SSC) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "dogs_percap",
+             palette = "-Spectral",
+             border.col = NA)
+```
+
+# Proportion of expensive dogs
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  arrange(desc(dogs_exp_prop)) %>% 
+  select(SSC_NAME16, dogs_total, URP, dogs_exp_prop) %>% 
+  slice(1:10)
+
+tm_shape(SSC) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "dogs_exp_prop",
+             palette = "-Spectral",
+             border.col = NA)
+```
+
+# Association with SEIFA
+
+## IRSD
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IRSD_d) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
+
+SSC %>% 
+  ggplot(aes(x = as.factor(IRSD_d), 
+             y = dogs_exp_prop)) + 
+  geom_boxplot(varwidth = TRUE)
+```
+
+## IRSAD
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IRSAD_d) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
+
+SSC %>% 
+  ggplot(aes(x = as.factor(IRSAD_d), 
+             y = dogs_exp_prop)) + 
+  geom_boxplot(varwidth = TRUE)
+```
+
+## IER
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IER_d) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
+
+SSC %>% 
+  ggplot(aes(x = as.factor(IER_d), 
+             y = dogs_exp_prop)) + 
+  geom_boxplot(varwidth = TRUE)
+```
+
+## IEO 
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IEO_d) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
+
+SSC %>% 
+  ggplot(aes(x = as.factor(IEO_d), 
+             y = dogs_exp_prop)) + 
+  geom_boxplot(varwidth = TRUE)
+```
+
+
+
+
