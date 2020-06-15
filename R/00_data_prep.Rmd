@@ -106,11 +106,11 @@ SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
 
 # SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
 
-saveRDS(SSC, "data/geo/SSC_2016_AUST.Rds")
+saveRDS(SSC, "data/geo/clean/SSC_2016_AUST.Rds")
 ```
 
 ```{r}
-SSC <- readRDS("data/geo/SSC_2016_AUST.Rds")
+SSC <- readRDS("data/geo/clean/SSC_2016_AUST.Rds")
 ```
 
 Areas without matches using original names
@@ -339,6 +339,8 @@ SSC %<>%
   mutate(IER_d = ntile(IER, 10)) %>%
   mutate(IEO_d_orig = IEO_d) %>% 
   mutate(IEO_d = ntile(IEO, 10))
+
+saveRDS(SSC, "data/geo/clean/SSC.Rds")
 ```
 
 ### `IRSD_d` 
