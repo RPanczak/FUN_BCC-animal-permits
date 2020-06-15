@@ -573,8 +573,8 @@ dog_ownership_cost <- left_join(dog_ownership, dog_cost, by = "dog_breed")
 dog_ownership_cost <- dog_ownership_cost %>% 
   mutate(
     expensive = case_when(
-      is.na(expensive) ~ "no",
-      expensive == "yes" ~ "yes"
+      is.na(expensive) ~ 0,
+      expensive == "yes" ~ 1
     )
   )
 
