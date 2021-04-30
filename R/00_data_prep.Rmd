@@ -5,6 +5,7 @@ author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   html_document: 
+    self_contained: true
     highlight: pygments
     keep_md: no
     number_sections: yes
@@ -19,7 +20,9 @@ editor_options:
 <!-- ------------------------------------------------------------ --> 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width=8, fig.height=6, dpi=300, out.width="800px", out.height="600px")
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width=8, fig.height=6, dpi=300, 
+                      out.width="800px", out.height="600px")
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 set.seed(12345)
@@ -45,8 +48,9 @@ tmap_mode("view") # makes map interactive
 
 ## BCC suburbs
 
-```{r eval=FALSE, include=FALSE}
-SUB <- read_csv("data/geo/raw/suburb-and-adjoining-suburb-november-2019.zip") %>% 
+```{r eval=FALSE}
+# orig data missing???
+SUB <- read_csv("data-raw/geo/suburb-and-adjoining-suburb-november-2019.zip") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
   select(suburb_name) %>% 
@@ -55,13 +59,13 @@ SUB <- read_csv("data/geo/raw/suburb-and-adjoining-suburb-november-2019.zip") %>
   mutate(SSC_NAME16 = str_to_title(SSC_NAME16)) %>% 
   arrange(SSC_NAME16)
 
-saveRDS(SUB, "data/geo/clean/SUB.Rds")
+write_rds(SUB, "data/geo/clean/SUB.Rds")
 ```
 
-Full (?) list of Brisbane suburbs. Top 5 alphabetically:
+Full ( hopefully ;) list of Brisbane suburbs. Top 5 alphabetically:
 
 ```{r}
-SUB <- readRDS("data/geo/clean/SUB.Rds")
+SUB <- read_rds("data/geo/SUB.Rds")
 
 # glimpse(SUB)
 
@@ -83,12 +87,15 @@ SUB %>%
 
 ## ABS
 
-Names from Brisbane containing `(Brisbane - Qld)`, names from Qld containing `(Qld)` have to cleaned to match BCC data.
+Names from Brisbane containing `(Brisbane - Qld)`, names from Qld containing `(Qld)` have to be cleaned to match BCC data.
 
-`Mcdowall` is called `McDowall` and `Mount Coot-tha` is `Mount Coot-Tha`.
+`Mcdowall` is called `McDowall` and `Mount Coot-tha` is `Mount Coot-Tha` - these have been unifeied as well.
 
-```{r eval=FALSE, include=FALSE}
-SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
+```{r}
+unzip("data-raw/geo/1270055003_ssc_2016_aust_shape.zip", 
+      exdir = "data-raw/geo")
+
+SSC <- st_read("data-raw/geo/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp", 
                stringsAsFactors = FALSE) %>% 
   mutate(SSC_CODE16 = as.integer(SSC_CODE16)) %>% 
   select(-STE_NAME16, -STE_CODE16, -AREASQKM16) %>% 	
@@ -106,18 +113,16 @@ SSC <- st_read("data/geo/raw/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
 
 # SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
 
-saveRDS(SSC, "data/geo/clean/SSC_2016_AUST.Rds")
-```
+write_rds(SSC, "data/geo/SSC_2016_AUST.Rds")
 
-```{r}
-SSC <- readRDS("data/geo/clean/SSC_2016_AUST.Rds")
+unlink("data-raw/geo/1270055003_ssc_2016_aust_shape", recursive = TRUE)
 ```
 
 Areas without matches using original names
 
 ```{r}
 SUB %>% 
-  left_join(SSC, by = c("SSC_NAME16" = "SSC_NAME16")) %>% 
+  left_join(SSC) %>% 
   select(-geometry) %>% 
   filter(SSC_NAME16 != SSC_NAME16_orig) %>% 
   kable() %>%
@@ -150,9 +155,12 @@ qtm(SSC, fill = NULL, borders = "darkorchid4",
 
 ```{r eval=FALSE, include=FALSE}
 ## QSC
-# data not needed at the moment
+# data not needed at the moment 
+# kept as backup solution in case of problem with source above
 
-LB <- st_read("data/geo/raw/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
+unzip("data-raw/geo/QSC_Extracted_Data_20190816_111155192000-13108.zip")
+
+LB <- st_read("data-raw/geo/QSC_Extracted_Data_20190816_111155192000-13108/Locality_Boundaries.shp", 
               stringsAsFactors = FALSE) %>% 
   select(-ADMINTYPEN, -CA_AREA_SQ, -SHAPE_Leng, -SHAPE_Area) %>% 
   mutate(LOC_CODE = as.integer(LOC_CODE)) %>% 
@@ -164,7 +172,7 @@ LB <- st_read("data/geo/raw/QSC_Extracted_Data_20190816_111155192000-13108/Local
 
 # LB <- ms_simplify(LB, keep = 0.05, weighting = 0.7) # default settings
 
-saveRDS(LB, "data/geo/clean/Locality_Boundaries.Rds")
+write_rds(LB, "data/geo/Locality_Boundaries.Rds")
 
 plot(st_geometry(LB))
 
@@ -202,6 +210,8 @@ LB %>%
 LB %>% 
   st_drop_geometry() %>% 
   filter(LOCALITY == "Stones Corner")
+
+unlink("data-raw/geo/QSC_Extracted_Data_20190816_111155192000-13108", recursive = TRUE)
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -209,7 +219,7 @@ LB %>%
 # SEIFA
 
 ```{r}
-SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls", 
+SEIFA <- read_xls("data-raw/SEIFA/2033055001 - ssc indexes.xls", 
                   sheet = "Table 1", skip = 5, n_max = 13719, na = "-") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -238,7 +248,7 @@ SEIFA <- read_xls("data/SEIFA/raw/2033055001 - ssc indexes.xls",
   ) %>% 
   mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
 
-saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
+write_rds(SEIFA, "data/SEIFA/SEIFA.Rds")
 ```
 
 ## Coverage
@@ -246,7 +256,7 @@ saveRDS(SEIFA, "data/SEIFA/clean/SEIFA.Rds")
 ### Data for Australia, example of IRSD.
 
 ```{r}
-SEIFA <- readRDS("data/SEIFA/clean/SEIFA.Rds") %>% 
+SEIFA %<>% 
   select(-SSC_NAME16)
 
 frq(SEIFA$IRSD_d)
@@ -325,6 +335,8 @@ SSC %>%
   select(-caution, -SSC_CODE16, -SSC_NAME16_orig)
 ```
 
+These remain included.
+
 ## 'Local' deciles
 
 Original values of indices were used to calculate 'local deciles' using SSCs for Brisbane only
@@ -340,7 +352,7 @@ SSC %<>%
   mutate(IEO_d_orig = IEO_d) %>% 
   mutate(IEO_d = ntile(IEO, 10))
 
-saveRDS(SSC, "data/geo/clean/SSC.Rds")
+write_rds(SSC, "data/geo/SSC.Rds")
 ```
 
 ### `IRSD_d` 
@@ -471,32 +483,46 @@ tm_shape(SSC) +
 
 # Dog cost 
 
-```{r eval=FALSE, include=FALSE}
-dog_cost <- read_xlsx("data/costs/raw/dog_expensive.xlsx") %>% 
+```{r}
+dog_cost <- read_xlsx("data-raw/costs/dog_expensive.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
   select(-web_source) %>% 
   rename(dog_breed = breed) %>%  
   select(dog_breed) %>% 
   distinct() %>% 
+  # correcting names for better matching - these one used in BCE
+  mutate(
+    dog_breed = case_when(
+      dog_breed == "Hairless Chinese Crested" ~ "Chinese Crested Dog",
+      dog_breed == "Saint Bernard" ~ "St Bernard",
+      TRUE ~ as.character(dog_breed))
+  ) %>% 
+  # synonyms
+  add_row(dog_breed = "Dogue de Bordeaux") %>% 
+  add_row(dog_breed = "Bulldog") %>% 
+  add_row(dog_breed = "British Bulldog") %>% 
+  mutate(expensive = "yes") %>% 
   arrange(dog_breed)
 
-saveRDS(dog_cost, "data/costs/clean/dog_cost.Rds")
+write_rds(dog_cost, "data/costs/dog_cost.Rds")
 ```
 
-Top 20 most expensive dogs
+Top 20 most expensive dogs (+3 synonyms!)
 
 ```{r}
-dog_cost <- readRDS("data/costs/clean/dog_cost.Rds")
-
-kableExtra::kable(dog_cost)
+dog_cost %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 <!-- ------------------------------------------------------------ --> 
 
 # Dog insurance
 
-```{r eval=FALSE, include=FALSE}
+Data scraped from https://top10petinsurance.com.au/pet-insurance-prices on the 30th March 2020
+
+```{r eval=FALSE}
 # packages needed
 # install.packages("rvest")
 
@@ -515,13 +541,11 @@ dog_insurance <- dog_insurance[[1]]
 
 head(dog_insurance)
 
-saveRDS(dog_insurance, "data/costs/raw/dog_insurance.Rds") # extracted on the 30 March 2020
+write_rds(dog_insurance, "data-raw/costs/dog_insurance.Rds") # extracted on the 30 March 2020
 ```
 
 ```{r}
-dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds")
-
-dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds") %>% 
+dog_insurance <- read_rds("data-raw/costs/dog_insurance.Rds") %>% 
   as_tibble() %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -553,11 +577,7 @@ dog_insurance <- readRDS("data/costs/raw/dog_insurance.Rds") %>%
                            fixed = TRUE))
   )
 
-saveRDS(dog_insurance, "data/costs/clean/dog_insurance.Rds") # extracted on the 30 March 2020
-```
-
-```{r}
-dog_insurance <- readRDS("data/costs/clean/dog_insurance.Rds")
+write_rds(dog_insurance, "data/costs/dog_insurance.Rds") 
 ```
 
 ## Three major categories
@@ -574,9 +594,11 @@ Breeds in `Above average` and `Significantly above average` categories:
 
 ```{r}
 dog_insurance %>% 
-  select(dog_breed, cost_compared_to_other_breeds) %>% 
+  select(dog_breed, average_comprehensive_policy_cost_annual, cost_compared_to_other_breeds) %>% 
   filter(cost_compared_to_other_breeds != "Below average") %>% 
-  kableExtra::kable()
+  arrange(desc(average_comprehensive_policy_cost_annual)) %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -584,36 +606,58 @@ dog_insurance %>%
 # Dog ownership in Brisbane
 
 ```{r}
-dog_ownership <- read_csv("data/permits/raw/cars-bis-open-data-animal-permits-3-jan-2019.zip")
+dog_ownership <- read_csv("data-raw/permits/cars-bis-open-data-animal-permits-3-jan-2019.zip")
 ```
 
-Raw dataset consists of `r comma(nrow(dog_ownership))`
+Raw dataset consists of `r comma(nrow(dog_ownership))` records.
 
 ## Data selection 
 
-Excluding records with `permit_name` *Breeders Permit*,	*Cattery Permit*, *Racehorses Permit* & *Pet Shop Permit*, *Domestic Dog Permit* & *Guard Dog Permit*.
+Excluding records with `permit_name`: *Breeders Permit*, *Cattery Permit*, *Racehorses Permit*, *Pet Shop Permit*, *Domestic Dog Permit* & *Guard Dog Permit*.
 
-Excluding records without neighbourhood.
+Excluding records without neighbourhood.  
 
-Excluding records without `dog_breed` values.
+Excluding records without `dog_breed` values.  
 
-*Stones Corner* values were assigned to *Greenslopes* SSC (see above).
+Excluding records with `dog_breed` listed as *Unknown* or *Cross*.  
 
-```{r eval=FALSE, include=FALSE}
+*Stones Corner* values were assigned to *Greenslopes* SSC (see information in section above).  
+
+```{r}
 dog_ownership %<>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
-  select(-permit_group, -permit_status) %>% # all the same here
+  # all the same here
+  select(-permit_group, -permit_status) %>% 
+  # special permits?
   filter(!permit_name %in% c("Breeders Permit",	"Cattery Permit", "Racehorses Permit", "Pet Shop Permit")) %>% 
   filter(!permit_name %in% c("Domestic Dog Permit", "Guard Dog Permit")) %>%
   rename(dog_breed = animal_breed,
          SSC_NAME16 = application_location_suburb) %>% 
   mutate(SSC_NAME16 = str_to_title(SSC_NAME16)) %>% 
+  # correct suburb
   mutate(SSC_NAME16 = ifelse(SSC_NAME16 == "Stones Corner", "Greenslopes", SSC_NAME16)) %>% 
+  # missing geo
   filter(!is.na(SSC_NAME16)) %>% 
-  filter(!is.na(dog_breed))
+  # missing breed
+  filter(!is.na(dog_breed)) %>% 
+  filter(!dog_breed %in% c("Unknown", 
+                           "Medium Cross Breed", "Small Cross Breed", "Large Cross Breed")) %>% 
+  # few cleans for better matches
+  mutate(
+    dog_breed = case_when(
+      dog_breed == "German Shepherd Dog (Long Stock Coat)" ~ "German Shepherd",
+      dog_breed == "German Shepherd Dog" ~ "German Shepherd",
+      dog_breed == "Central Asian Shepherd Dog " ~ "Central Asian Shepherd",
+      dog_breed == "Kangal Dog" ~ "Kangal",
+      dog_breed == "Bulldog" ~ "British Bulldog",
+      dog_breed == "Collie (Rough)" ~ "Rough Collie", 
+      dog_breed == "Collie (Smooth)" ~ "Smooth Collie",      
+      
+      TRUE ~ as.character(dog_breed))
+  ) 
 
-saveRDS(dog_ownership, "data/permits/clean/dog_ownership.Rds") 
+write_rds(dog_ownership, "data/permits/dog_ownership.Rds") 
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -629,39 +673,15 @@ test <- dog_ownership %>%
   mutate(perc = (ind/total)*100)
 ```
 
-```{r}
-dog_ownership <- readRDS("data/permits/clean/dog_ownership.Rds") 
-```
-
-`r comma(nrow(dog_ownership))` records after exclusions
+`r comma(nrow(dog_ownership))` records after exclusions. 
 
 ## Data merging - `dog_cost`
 
-Merge data of `dog_cost` and `dog_ownership`. Aim: dog breeds should have same name in all data sets.
-
 ```{r}
-# rename dog_ownership dog names to match dog_cost names
-# table(dog_ownership$dog_breed)
-
-dog_ownership <- dog_ownership %>%
-  mutate(
-    dog_breed = case_when(
-      dog_breed == "Akita (Japanese)" ~ "Akita",
-      dog_breed == "Dogue de Bordeaux" ~ "French Mastiff",
-      dog_breed == "British Bulldog" ~ "English Bulldog",
-      dog_breed == "Bulldog" ~ "English Bulldog",
-      dog_breed == "German Shepherd Dog (Long Stock Coat)" ~ "German Shepherd",
-      dog_breed == "German Shepherd Dog" ~ "German Shepherd",
-      dog_breed == "Chinese Crested Dog" ~ "Hairless Chinese Crested",
-      dog_breed == "St Bernard" ~ "Saint Bernard",
-      TRUE ~ as.character(dog_breed)))
-
-# binary indicator "expensive" and "non-expensive" dog breeds according to dog_cost
-dog_cost$expensive <- "yes"
-
 dog_ownership_cost <- left_join(dog_ownership, dog_cost, by = "dog_breed")
 
-dog_ownership_cost <- dog_ownership_cost %>% 
+# binary indicator "expensive" and "non-expensive" dog breeds according to dog_cost
+dog_ownership_cost %<>% 
   mutate(
     expensive = case_when(
       is.na(expensive) ~ 0,
@@ -669,17 +689,128 @@ dog_ownership_cost <- dog_ownership_cost %>%
     )
   )
 
-saveRDS(dog_ownership_cost, "data/permits/clean/dog_ownership_cost.Rds") 
+frq(dog_ownership_cost, expensive)
 ```
 
 ## Data merging - `dog_insurance`
 
+Correcting names for better match
+
 ```{r}
-# rename dog_insurance names to match dog_cost names.
-
-# rename dog_ownership names to match dog_insurance dog names. 
-
+dog_insurance %<>%
+  mutate(
+    dog_breed = case_when(
+      # this is a bit tricky! might need sensitivity?
+      dog_breed == "French Poodle" ~ "Poodle",  
+      
+      # just naming issues
+      dog_breed == "Poodle – Standard" ~ "Poodle (Standard)",
+      dog_breed == "Miniature Poodle" ~ "Poodle (Miniature)",
+      dog_breed == "Poodle – Toy" ~ "Poodle (Toy)",
+      dog_breed == "Shar-Pei" ~ "Shar Pei", 
+      dog_breed == "German Short Haired Pointer" ~ "German Shorthaired Pointer", 
+      dog_breed == "German Wire Haired Pointer" ~ "German Wirehaired Pointer", 
+      dog_breed == "Collie – Rough" ~ "Rough Collie", 
+      dog_breed == "Collie – Smooth" ~ "Smooth Collie", 
+      dog_breed == "Miniature Schnauzer" ~ "Schnauzer (Miniature)", 
+      dog_breed == "Schnauzer Giant" ~ "Schnauzer (Giant)", 
+      dog_breed == "Lagotto Rom" ~ "Lagotto Romagnolo", 
+      dog_breed == "Brittany Spaniel" ~ "Brittany", 
+      dog_breed == "Staghound" ~ "Stag Hound", 
+      dog_breed == "Kerry Blue" ~ "Kerry Blue Terrier", 
+      dog_breed == "English Toy terrier" ~ "English Toy Terrier",
+      dog_breed == "Parson Jack Russell Terrier" ~ "Parson Russell Terrier", 
+      dog_breed == "Welsh Corgi – Pembroke" ~ "Welsh Corgi (Pembroke)", 
+      dog_breed == "American Cocker Spaniel" ~ "Cocker Spaniel (American)",
+      dog_breed == "Basset Fauve De Bretagne" ~ "Basset Fauve de Bretagne", 
+      dog_breed == "Norwegian Elk Hound" ~ "Norwegian Elkhound", 
+      dog_breed == "Cheasapeake Bay Retriever" ~ "Chesapeake Bay Retriever", 
+      dog_breed == "Bouvier Des Flandres" ~ "Bouvier des Flandres", 
+      dog_breed == "Miniature Bull Terrier" ~ "Bull Terrier (Miniature)", 
+      dog_breed == "Munsterlander – Large" ~ "Large Munsterlander", 
+      dog_breed == "Welsh Corgi – Cardigan" ~ "Welsh Corgi (Cardigan)", 
+      dog_breed == "HamiltonStovare" ~ "Hamiltonstovare",
+      dog_breed == "Blue tick Coonhound" ~ "Bluetick Coonhound",
+      dog_breed == "Japanese Akita" ~ "Akita (Japanese)",
+      dog_breed == "Dogue De Bordeaux" ~ "Dogue de Bordeaux",
+      dog_breed == "Italian Cane Corso" ~ "Italian Corso Dog",
+      
+      # different kelpies but same category anyway
+      dog_breed == "Australian Kelpie Sheepdog" ~ "Australian Kelpie", 
+      
+      # typo
+      dog_breed == "Neopolitan Mastiff" ~ "Neapolitan Mastiff", 
+      TRUE ~ as.character(dog_breed)))
 ```
+
+Dog breeds without match 
+
+```{r}
+dog_ownership_cost %>% anti_join(
+  dog_insurance %>% select(dog_breed, cost_compared_to_other_breeds)
+) %>%
+  group_by(dog_breed) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+Some further corrections still possible here:
+
+```{r}
+dog_ownership_cost <-  left_join(dog_ownership_cost, 
+                                 dog_insurance %>% 
+                                   select(dog_breed, cost_compared_to_other_breeds)
+) %>% 
+  mutate(
+    cost_compared_to_other_breeds = case_when(
+      # all the same
+      dog_breed == "Fox Terrier" ~ "Below average",
+      dog_breed == "Fox Terrier (Smooth)" ~ "Below average",
+      dog_breed == "Fox Terrier (Wire)" ~ "Below average",
+      dog_breed == "Schnauzer" ~ "Below average",
+      dog_breed == "Australian Stumpy Tail Cattle Dog" ~ "Below average",
+      dog_breed == "Foxhound" ~ "Below average",
+      dog_breed == "White Swiss Shepherd Dog" ~ "Below average",
+      
+      # multiple options here, but all above going for conservative
+      dog_breed == "Welsh Corgi" ~ "Above average",
+      
+      # taking values from Chihuahua
+      dog_breed == "Chihuahua (Smooth Coat)" ~ "Below average",
+      dog_breed == "Chihuahua (Long Coat)" ~ "Below average",
+      dog_breed == "Chihuahua (Long Coat)" ~ "Below average",
+      
+      # naming - Dogue De Bordeaux
+      dog_breed == "French Mastiff" ~ "Significantly above average",
+      TRUE ~ as.character(cost_compared_to_other_breeds)))
+```
+
+Few things left:  
+
+```{r}
+dog_ownership_cost %>% 
+  filter(is.na(cost_compared_to_other_breeds)) %>%
+  group_by(dog_breed) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+Two largest groups:  
+
+*Pointer* - insufficient info!
+*Akita* - insufficient info! Could be Inu, could be Japanese
+
+These observations will remain as `NA`s.  
+
+```{r}
+write_rds(dog_ownership_cost, "data/permits/dog_ownership_cost.Rds")
+```
+
+
 
 
 
