@@ -19,16 +19,12 @@ editor_options:
 
 <!-- ------------------------------------------------------------ --> 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
-                      fig.width=8, fig.height=6, dpi=300, 
-                      out.width="800px", out.height="600px")
-
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```{r r-setup, include = FALSE}
 set.seed(12345)
-options(scipen = 999)
+options(scipen=999)
+options(max.print = "75")
 
-library(pacman) 
+library(pacman)
 p_load(tidyverse, readxl, magrittr, scales,
        janitor, sjmisc, sjPlot, kableExtra,
        sf, tmap, rmapshaper)
@@ -40,6 +36,23 @@ tmap_mode("view") # makes map interactive
 # for (f in getNamespaceExports("tidylog")) {
 #   conflicted::conflict_prefer(f, "tidylog", quiet = TRUE)
 # }
+```
+
+```{r knit-setup, include = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width=8, fig.height=6, dpi=300, 
+                      out.width="800px", out.height="600px")
+
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+knitr::opts_knit$set(width = 75)
+mu <- Hmisc::markupSpecs$html
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -810,7 +823,11 @@ These observations will remain as `NA`s.
 write_rds(dog_ownership_cost, "data/permits/dog_ownership_cost.Rds")
 ```
 
+<!-- ----------------------------------------------------- -->
 
+# Computing Environment
+
+`r mu$session()`
 
 
 
