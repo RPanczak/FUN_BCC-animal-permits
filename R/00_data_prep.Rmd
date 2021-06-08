@@ -51,7 +51,9 @@ knitr::opts_chunk$set(cache = FALSE,
                       comment = NA,
                       message = FALSE,
                       warning = FALSE)
+
 knitr::opts_knit$set(width = 75)
+
 mu <- Hmisc::markupSpecs$html
 ```
 
@@ -356,14 +358,14 @@ Original values of indices were used to calculate 'local deciles' using SSCs for
 
 ```{r}
 SSC %<>% 
-  mutate(IRSD_d_orig = IRSD_d) %>% 
-  mutate(IRSD_d = ntile(IRSD, 10)) %>%
-  mutate(IRSAD_d_orig = IRSAD_d) %>% 
-  mutate(IRSAD_d = ntile(IRSAD, 10)) %>%
-  mutate(IER_d_orig = IER_d) %>% 
-  mutate(IER_d = ntile(IER, 10)) %>%
-  mutate(IEO_d_orig = IEO_d) %>% 
-  mutate(IEO_d = ntile(IEO, 10))
+  mutate(IRSD_d_orig = IRSD_d,
+         IRSD_d = ntile(IRSD, 10),
+         IRSAD_d_orig = IRSAD_d,
+         IRSAD_d = ntile(IRSAD, 10),
+         IER_d_orig = IER_d,
+         IER_d = ntile(IER, 10),
+         IEO_d_orig = IEO_d,
+         IEO_d = ntile(IEO, 10))
 
 write_rds(SSC, "data/geo/SSC.Rds")
 ```
@@ -385,11 +387,12 @@ plot_xtab(SSC$IRSD_d, SSC$IRSD_d_orig,
           show.summary = TRUE, coord.flip = TRUE)
 
 tabz <- table(SSC$IRSD_d, SSC$IRSD_d_orig)
+
 assocplot(tabz,
           xlab = "IRSD_d", ylab = "IRSD_d_orig")
+
 mosaicplot(tabz,
            xlab = "IRSD_d", ylab = "IRSD_d_orig")
-
 ```
 
 ```{r}
@@ -416,11 +419,12 @@ plot_xtab(SSC$IRSAD_d, SSC$IRSAD_d_orig,
           show.summary = TRUE, coord.flip = TRUE)
 
 tabz <- table(SSC$IRSAD_d, SSC$IRSAD_d_orig)
+
 assocplot(tabz,
           xlab = "IRSAD_d", ylab = "IRSAD_d_orig")
+
 mosaicplot(tabz,
            xlab = "IRSAD_d", ylab = "IRSAD_d_orig")
-
 ```
 
 ```{r}
@@ -447,11 +451,12 @@ plot_xtab(SSC$IER_d, SSC$IER_d_orig,
           show.summary = TRUE, coord.flip = TRUE)
 
 tabz <- table(SSC$IER_d, SSC$IER_d_orig)
+
 assocplot(tabz,
           xlab = "IER_d", ylab = "IER_d_orig")
+
 mosaicplot(tabz,
            xlab = "IER_d", ylab = "IER_d_orig")
-
 ```
 
 ```{r}
@@ -478,11 +483,12 @@ plot_xtab(SSC$IEO_d, SSC$IEO_d_orig,
           show.summary = TRUE, coord.flip = TRUE)
 
 tabz <- table(SSC$IEO_d, SSC$IEO_d_orig)
+
 assocplot(tabz,
           xlab = "IEO_d", ylab = "IEO_d_orig")
+
 mosaicplot(tabz,
            xlab = "IEO_d", ylab = "IEO_d_orig")
-
 ```
 
 ```{r}
