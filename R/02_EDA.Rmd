@@ -68,7 +68,6 @@ dog_ownership_cost %>%
   ylab("Number of dogs") + xlab("")
 ```
 
-
 # All dogs per capita
 
 ```{r}
@@ -152,6 +151,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IRSD_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
@@ -167,6 +167,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IRSD_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
@@ -184,6 +185,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IRSAD_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
@@ -199,6 +201,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IRSAD_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
@@ -216,6 +219,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IER_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
@@ -231,6 +235,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IER_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
@@ -248,6 +253,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IEO_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
@@ -263,6 +269,7 @@ SSC %>%
   st_drop_geometry() %>% 
   group_by(IEO_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
+            sd = sd(dogs_exp_prop),
             median = median(dogs_exp_prop))
 
 SSC %>% 
