@@ -152,7 +152,9 @@ SSC %>%
   group_by(IRSD_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IRSD_d), 
@@ -168,7 +170,9 @@ SSC %>%
   group_by(IRSD_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IRSD_d_orig), 
@@ -186,7 +190,9 @@ SSC %>%
   group_by(IRSAD_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IRSAD_d), 
@@ -202,7 +208,9 @@ SSC %>%
   group_by(IRSAD_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IRSAD_d_orig), 
@@ -220,7 +228,9 @@ SSC %>%
   group_by(IER_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IER_d), 
@@ -236,7 +246,9 @@ SSC %>%
   group_by(IER_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IER_d_orig), 
@@ -254,7 +266,9 @@ SSC %>%
   group_by(IEO_d) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IEO_d), 
@@ -270,7 +284,9 @@ SSC %>%
   group_by(IEO_d_orig) %>% 
   summarize(mean = mean(dogs_exp_prop),
             sd = sd(dogs_exp_prop),
-            median = median(dogs_exp_prop))
+            p25 = quantile(dogs_exp_prop, c(0.25)),
+            p50 = quantile(dogs_exp_prop, c(0.50)),
+            p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
   ggplot(aes(x = as.factor(IEO_d_orig), 
