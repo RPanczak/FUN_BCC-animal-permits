@@ -19,7 +19,9 @@ editor_options:
 <!-- ------------------------------------------------------------ --> 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width=8, fig.height=6, dpi=300, out.width="800px", out.height="600px")
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width=8, fig.height=6, dpi=300, 
+                      out.width="800px", out.height="600px")
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 set.seed(12345)
@@ -40,9 +42,9 @@ tmap_mode("view") # makes map interactive
 ```
 
 ```{r}
-dog_ownership_cost <- readRDS("data/permits/clean/dog_ownership_cost.Rds") 
+dog_ownership_cost <- read_rds("data/permits/dog_ownership_cost.Rds") 
 
-SSC <- readRDS("data/geo/clean/SSC.Rds")
+SSC <- read_rds("data/geo/SSC.Rds")
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -88,7 +90,6 @@ SSC %>%
   filter(is.na(SSC_CODE16)) %>% 
   select(SSC_NAME16, dogs_total)
 ```
-
 
 Area with low URP and no dogs at all:
 
@@ -142,7 +143,9 @@ tm_shape(SSC) +
 
 # Association with SEIFA
 
-## IRSD
+## IRSD {.tabset}
+
+### Recalculated 
 
 ```{r}
 SSC %>% 
@@ -154,10 +157,27 @@ SSC %>%
 SSC %>% 
   ggplot(aes(x = as.factor(IRSD_d), 
              y = dogs_exp_prop)) + 
+  geom_boxplot()
+```
+
+### Original 
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IRSD_d_orig) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
+
+SSC %>% 
+  ggplot(aes(x = as.factor(IRSD_d_orig), 
+             y = dogs_exp_prop)) + 
   geom_boxplot(varwidth = TRUE)
 ```
 
-## IRSAD
+## IRSAD {.tabset}
+
+### Recalculated 
 
 ```{r}
 SSC %>% 
@@ -169,10 +189,27 @@ SSC %>%
 SSC %>% 
   ggplot(aes(x = as.factor(IRSAD_d), 
              y = dogs_exp_prop)) + 
+  geom_boxplot()
+```
+
+### Original 
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IRSAD_d_orig) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
+
+SSC %>% 
+  ggplot(aes(x = as.factor(IRSAD_d_orig), 
+             y = dogs_exp_prop)) + 
   geom_boxplot(varwidth = TRUE)
 ```
 
-## IER
+## IER {.tabset}
+
+### Recalculated 
 
 ```{r}
 SSC %>% 
@@ -184,10 +221,27 @@ SSC %>%
 SSC %>% 
   ggplot(aes(x = as.factor(IER_d), 
              y = dogs_exp_prop)) + 
+  geom_boxplot()
+```
+
+### Original 
+
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IER_d_orig) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
+
+SSC %>% 
+  ggplot(aes(x = as.factor(IER_d_orig), 
+             y = dogs_exp_prop)) + 
   geom_boxplot(varwidth = TRUE)
 ```
 
-## IEO 
+## IEO {.tabset}
+
+### Recalculated 
 
 ```{r}
 SSC %>% 
@@ -199,9 +253,20 @@ SSC %>%
 SSC %>% 
   ggplot(aes(x = as.factor(IEO_d), 
              y = dogs_exp_prop)) + 
-  geom_boxplot(varwidth = TRUE)
+  geom_boxplot()
 ```
 
+### Original 
 
+```{r}
+SSC %>% 
+  st_drop_geometry() %>% 
+  group_by(IEO_d_orig) %>% 
+  summarize(mean = mean(dogs_exp_prop),
+            median = median(dogs_exp_prop))
 
-
+SSC %>% 
+  ggplot(aes(x = as.factor(IEO_d_orig), 
+             y = dogs_exp_prop)) + 
+  geom_boxplot(varwidth = TRUE)
+```
