@@ -1,6 +1,6 @@
 ---
 title: "Dog-SEP"
-subtitle: "Gog cost"
+subtitle: "Dog cost"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
@@ -26,10 +26,10 @@ options(scipen = 999)
 options(max.print = "75")
 
 library(pacman)
-p_load(tidyverse, readxl, magrittr, scales,
-       janitor, sjmisc, kableExtra,
-       sf, tmap, rmapshaper,
-       correlation)
+p_load(tidyverse, magrittr, scales,
+       sjmisc, kableExtra,
+       sf, tmap,
+       correlation, see, modelbased)
 
 tmap_mode("view") # makes map interactive
 
@@ -155,6 +155,10 @@ tm_shape(SSC) +
 
 ## Proportion of expensive dogs
 
+```{r}
+summary(SSC$dogs_exp_prop)
+```
+
 Top 10 n'hoods:
 
 ```{r}
@@ -180,52 +184,76 @@ tm_shape(SSC) +
 
 # Association with SEIFA
 
+## Functions
+
+```{r}
+seifa_means <- function (seifa_index) {
+  
+  myenc <- enquo(seifa_index)
+  
+  SSC %>% 
+    st_drop_geometry() %>% 
+    group_by(!!myenc) %>% 
+    summarize(mean = mean(dogs_exp_prop),
+              sd = sd(dogs_exp_prop),
+              p25 = quantile(dogs_exp_prop, c(0.25)),
+              p50 = quantile(dogs_exp_prop, c(0.50)),
+              p75 = quantile(dogs_exp_prop, c(0.75)))
+  ungroup()
+}
+
+seifa_cor <- function (seifa_index) {
+  
+  myenc <- enquo(seifa_index)
+  
+  SSC %>%
+    st_drop_geometry() %>%
+    select(!!myenc, dogs_exp_prop) %>%
+    correlation(method = "kendall")
+  
+}
+
+seifa_plot <- function (seifa_index) {
+  
+  model <- eval(substitute(lm(dogs_exp_prop ~ as.factor(seifa_index), 
+                              data = SSC)))
+  means <- estimate_means(model)
+  
+  myenc <- enquo(seifa_index)
+  
+  ggplot(SSC,
+         aes(x = as.factor(!!myenc),
+             y = dogs_exp_prop,
+             fill = as.factor(!!myenc))) +
+    geom_violin(alpha = 0.66) +
+    geom_jitter2(width = 0.05, alpha = 0.5) +
+    geom_line(data = means, aes(y = Mean, group = 1), size = 1) +
+    geom_pointrange(data = means,
+                    aes(y = Mean, ymin = CI_low, ymax = CI_high),
+                    size = 1,
+                    color = "white") + 
+    scale_fill_brewer(palette = "BrBG") +
+    theme_modern()
+  
+}
+```
+
 ## IRSD {.tabset}
 
 ### Recalculated 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IRSD_d) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IRSD_d, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IRSD_d), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot()
+seifa_means(IRSD_d)
+seifa_cor(IRSD_d)
+seifa_plot(IRSD_d)
 ```
 
 ### Original 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IRSD_d_orig) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IRSD_d_orig, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IRSD_d_orig), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot(varwidth = TRUE)
+seifa_means(IRSD_d_orig)
+seifa_cor(IRSD_d_orig)
+seifa_plot(IRSD_d_orig)
 ```
 
 ## IRSAD {.tabset}
@@ -233,47 +261,17 @@ SSC %>%
 ### Recalculated 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IRSAD_d) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IRSAD_d, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IRSAD_d), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot()
+seifa_means(IRSAD_d)
+seifa_cor(IRSAD_d)
+seifa_plot(IRSAD_d)
 ```
 
 ### Original 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IRSAD_d_orig) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IRSAD_d_orig, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IRSAD_d_orig), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot(varwidth = TRUE)
+seifa_means(IRSAD_d_orig)
+seifa_cor(IRSAD_d_orig)
+seifa_plot(IRSAD_d_orig)
 ```
 
 ## IER {.tabset}
@@ -281,47 +279,17 @@ SSC %>%
 ### Recalculated 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IER_d) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IER_d, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IER_d), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot()
+seifa_means(IER_d)
+seifa_cor(IER_d)
+seifa_plot(IER_d)
 ```
 
 ### Original 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IER_d_orig) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IER_d_orig, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IER_d_orig), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot(varwidth = TRUE)
+seifa_means(IER_d_orig)
+seifa_cor(IER_d_orig)
+seifa_plot(IER_d_orig)
 ```
 
 ## IEO {.tabset}
@@ -329,47 +297,17 @@ SSC %>%
 ### Recalculated 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IEO_d) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IEO_d, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IEO_d), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot()
+seifa_means(IEO_d)
+seifa_cor(IEO_d)
+seifa_plot(IEO_d)
 ```
 
 ### Original 
 
 ```{r}
-SSC %>% 
-  st_drop_geometry() %>% 
-  group_by(IEO_d_orig) %>% 
-  summarize(mean = mean(dogs_exp_prop),
-            sd = sd(dogs_exp_prop),
-            p25 = quantile(dogs_exp_prop, c(0.25)),
-            p50 = quantile(dogs_exp_prop, c(0.50)),
-            p75 = quantile(dogs_exp_prop, c(0.75)))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  select(IEO_d_orig, dogs_exp_prop) %>% 
-  correlation(method = "kendall")
-
-SSC %>% 
-  ggplot(aes(x = as.factor(IEO_d_orig), 
-             y = dogs_exp_prop)) + 
-  geom_boxplot(varwidth = TRUE)
+seifa_means(IEO_d_orig)
+seifa_cor(IEO_d_orig)
+seifa_plot(IEO_d_orig)
 ```
 
 <!-- ----------------------------------------------------- -->
