@@ -6,10 +6,12 @@ Analyses of BCC data - animal permits & complaints
 
 ## Data sources
 
+ABS data 
+  - [SEIFA indices](https://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/2033.0.55.0012016?OpenDocument)
+  
 BCC data 
     - [permits](https://www.data.brisbane.qld.gov.au/data/dataset/current-animal-related-permits)
     - [complaints](https://www.data.brisbane.qld.gov.au/data/dataset/animal-related-complaints)
-  - [SEIFA indices](https://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/2033.0.55.0012016?OpenDocument)
 
 Geographical data:
     - [BCC Suburbs and Adjoining Suburbs](https://www.data.brisbane.qld.gov.au/data/dataset/suburbs-and-adjoining-suburbs/resource/6fb89462-5ac5-4589-8576-cdca03652bc8)
