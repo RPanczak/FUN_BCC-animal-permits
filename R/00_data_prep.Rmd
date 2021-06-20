@@ -578,7 +578,7 @@ head(dog_insurance)
 write_rds(dog_insurance, "data-raw/costs/dog_insurance.Rds") # extracted on the 30 March 2020
 ```
 
-```{r}
+```{r eval=FALSE}
 dog_insurance <- read_rds("data-raw/costs/dog_insurance.Rds") %>% 
   as_tibble() %>% 
   clean_names() %>%
@@ -614,12 +614,17 @@ dog_insurance <- read_rds("data-raw/costs/dog_insurance.Rds") %>%
 write_rds(dog_insurance, "data/costs/dog_insurance.Rds") 
 ```
 
+```{r}
+dog_insurance <- read_rds("data/costs/dog_insurance.Rds") 
+```
+
 ## Three major categories
 
 ```{r}
 dog_insurance %>% 
   frq(cost_compared_to_other_breeds) %>% 
-  kableExtra::kable()
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ## Individual breeds
@@ -657,7 +662,7 @@ Excluding records with `dog_breed` listed as *Unknown* or *Cross*.
 
 *Stones Corner* values were assigned to *Greenslopes* SSC (see information in section above).  
 
-```{r}
+```{r eval=FALSE}
 dog_ownership %<>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -692,6 +697,10 @@ dog_ownership %<>%
   ) 
 
 write_rds(dog_ownership, "data/permits/dog_ownership.Rds") 
+```
+
+```{r}
+dog_ownership <- read_rds("data/permits/dog_ownership.Rds") 
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -835,8 +844,8 @@ dog_ownership_cost %>%
 
 Two largest groups:  
 
-*Pointer* - insufficient info!
-*Akita* - insufficient info! Could be Inu, could be Japanese
+*Pointer* - insufficient info!  
+*Akita* - insufficient info! Could be Inu, could be Japanese  
 
 These observations will remain as `NA`s.  
 
@@ -849,6 +858,3 @@ write_rds(dog_ownership_cost, "data/permits/dog_ownership_cost.Rds")
 # Computing Environment
 
 `r mu$session()`
-
-
-
