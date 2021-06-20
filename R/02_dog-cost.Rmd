@@ -1,6 +1,6 @@
 ---
 title: "Dog-SEP"
-subtitle: "EDA"
+subtitle: "Gog cost"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
@@ -28,7 +28,8 @@ options(max.print = "75")
 library(pacman)
 p_load(tidyverse, readxl, magrittr, scales,
        janitor, sjmisc, kableExtra,
-       sf, tmap, rmapshaper)
+       sf, tmap, rmapshaper,
+       correlation)
 
 tmap_mode("view") # makes map interactive
 
@@ -194,6 +195,11 @@ SSC %>%
             p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
+  st_drop_geometry() %>% 
+  select(IRSD_d, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
+
+SSC %>% 
   ggplot(aes(x = as.factor(IRSD_d), 
              y = dogs_exp_prop)) + 
   geom_boxplot()
@@ -210,6 +216,11 @@ SSC %>%
             p25 = quantile(dogs_exp_prop, c(0.25)),
             p50 = quantile(dogs_exp_prop, c(0.50)),
             p75 = quantile(dogs_exp_prop, c(0.75)))
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  select(IRSD_d_orig, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
 
 SSC %>% 
   ggplot(aes(x = as.factor(IRSD_d_orig), 
@@ -232,6 +243,11 @@ SSC %>%
             p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
+  st_drop_geometry() %>% 
+  select(IRSAD_d, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
+
+SSC %>% 
   ggplot(aes(x = as.factor(IRSAD_d), 
              y = dogs_exp_prop)) + 
   geom_boxplot()
@@ -248,6 +264,11 @@ SSC %>%
             p25 = quantile(dogs_exp_prop, c(0.25)),
             p50 = quantile(dogs_exp_prop, c(0.50)),
             p75 = quantile(dogs_exp_prop, c(0.75)))
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  select(IRSAD_d_orig, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
 
 SSC %>% 
   ggplot(aes(x = as.factor(IRSAD_d_orig), 
@@ -270,6 +291,11 @@ SSC %>%
             p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
+  st_drop_geometry() %>% 
+  select(IER_d, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
+
+SSC %>% 
   ggplot(aes(x = as.factor(IER_d), 
              y = dogs_exp_prop)) + 
   geom_boxplot()
@@ -286,6 +312,11 @@ SSC %>%
             p25 = quantile(dogs_exp_prop, c(0.25)),
             p50 = quantile(dogs_exp_prop, c(0.50)),
             p75 = quantile(dogs_exp_prop, c(0.75)))
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  select(IER_d_orig, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
 
 SSC %>% 
   ggplot(aes(x = as.factor(IER_d_orig), 
@@ -308,6 +339,11 @@ SSC %>%
             p75 = quantile(dogs_exp_prop, c(0.75)))
 
 SSC %>% 
+  st_drop_geometry() %>% 
+  select(IEO_d, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
+
+SSC %>% 
   ggplot(aes(x = as.factor(IEO_d), 
              y = dogs_exp_prop)) + 
   geom_boxplot()
@@ -324,6 +360,11 @@ SSC %>%
             p25 = quantile(dogs_exp_prop, c(0.25)),
             p50 = quantile(dogs_exp_prop, c(0.50)),
             p75 = quantile(dogs_exp_prop, c(0.75)))
+
+SSC %>% 
+  st_drop_geometry() %>% 
+  select(IEO_d_orig, dogs_exp_prop) %>% 
+  correlation(method = "kendall")
 
 SSC %>% 
   ggplot(aes(x = as.factor(IEO_d_orig), 
