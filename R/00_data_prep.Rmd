@@ -21,7 +21,7 @@ editor_options:
 
 ```{r r-setup, include = FALSE}
 set.seed(12345)
-options(scipen=999)
+options(scipen = 999)
 options(max.print = "75")
 
 library(pacman)
@@ -77,7 +77,7 @@ SUB <- read_csv("data-raw/geo/suburb-and-adjoining-suburb-november-2019.zip") %>
 write_rds(SUB, "data/geo/clean/SUB.Rds")
 ```
 
-Full ( hopefully ;) list of Brisbane suburbs. Top 5 alphabetically:
+Full (**hopefully**) list of Brisbane suburbs. Top 5 alphabetically:
 
 ```{r}
 SUB <- read_rds("data/geo/SUB.Rds")
@@ -104,9 +104,9 @@ SUB %>%
 
 Names from Brisbane containing `(Brisbane - Qld)`, names from Qld containing `(Qld)` have to be cleaned to match BCC data.
 
-`Mcdowall` is called `McDowall` and `Mount Coot-tha` is `Mount Coot-Tha` - these have been unifeied as well.
+`Mcdowall` is called `McDowall` and `Mount Coot-tha` is `Mount Coot-Tha` - these have been unified as well.
 
-```{r}
+```{r eval=FALSE}
 unzip("data-raw/geo/1270055003_ssc_2016_aust_shape.zip", 
       exdir = "data-raw/geo")
 
@@ -136,6 +136,8 @@ unlink("data-raw/geo/1270055003_ssc_2016_aust_shape", recursive = TRUE)
 Areas without matches using original names
 
 ```{r}
+SSC <- read_rds("data/geo/SSC_2016_AUST.Rds")
+
 SUB %>% 
   left_join(SSC) %>% 
   select(-geometry) %>% 
@@ -166,7 +168,6 @@ SSC %<>%
 qtm(SSC, fill = NULL, borders = "darkorchid4", 
     text ="SSC_NAME16", text.col = "darkorchid4")
 ```
-
 
 ```{r eval=FALSE, include=FALSE}
 ## QSC
@@ -233,7 +234,7 @@ unlink("data-raw/geo/QSC_Extracted_Data_20190816_111155192000-13108", recursive 
 
 # SEIFA
 
-```{r}
+```{r eval=FALSE}
 SEIFA <- read_xls("data-raw/SEIFA/2033055001 - ssc indexes.xls", 
                   sheet = "Table 1", skip = 5, n_max = 13719, na = "-") %>% 
   clean_names() %>%
@@ -264,6 +265,10 @@ SEIFA <- read_xls("data-raw/SEIFA/2033055001 - ssc indexes.xls",
   mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
 
 write_rds(SEIFA, "data/SEIFA/SEIFA.Rds")
+```
+
+```{r}
+SEIFA <- read_rds("data/SEIFA/SEIFA.Rds")
 ```
 
 ## Coverage
@@ -397,7 +402,8 @@ mosaicplot(tabz,
 
 ```{r}
 tm_shape(SSC) +
-  tm_polygons(col = "IRSD_d", n = 10, palette = "div",
+  tm_polygons(col = c("IRSD_d", "IRSD_d_orig"),
+              n = 10, palette = "div",
               id = "SSC_NAME16", 
               popup.vars = c("SSC_NAME16", "IRSD_d", "IRSD"))
 ```
@@ -429,7 +435,8 @@ mosaicplot(tabz,
 
 ```{r}
 tm_shape(SSC) +
-  tm_polygons(col = "IRSAD_d", n = 10, palette = "div",
+  tm_polygons(col = c("IRSAD_d", "IRSAD_d_orig"),
+              n = 10, palette = "div",
               id = "SSC_NAME16", 
               popup.vars = c("SSC_NAME16", "IRSAD_d", "IRSAD"))
 ```
@@ -461,7 +468,8 @@ mosaicplot(tabz,
 
 ```{r}
 tm_shape(SSC) +
-  tm_polygons(col = "IER_d", n = 10, palette = "div",
+  tm_polygons(col = c("IER_d", "IER_d_orig"),
+              n = 10, palette = "div",
               id = "SSC_NAME16", 
               popup.vars = c("SSC_NAME16", "IER_d", "IER"))
 ```
@@ -493,7 +501,8 @@ mosaicplot(tabz,
 
 ```{r}
 tm_shape(SSC) +
-  tm_polygons(col = "IEO_d", n = 10, palette = "div",
+  tm_polygons(col = c("IEO_d", "IEO_d_orig"),
+              n = 10, palette = "div",
               id = "SSC_NAME16", 
               popup.vars = c("SSC_NAME16", "IEO_d", "IEO"))
 ```
