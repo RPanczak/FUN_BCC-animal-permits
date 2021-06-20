@@ -21,7 +21,8 @@ Geographical data:
 ## Analyses of breeds & SEIFA
 
  - Preregistration: [OSF](https://osf.io/7x4t3), [doc](https://rpanczak.github.io/FUN_BCC-animals/01_preregistration.html)
- - [Analyses](https://rpanczak.github.io/FUN_BCC-animals/02_dog-cost.html)
+ - [Costs](https://rpanczak.github.io/FUN_BCC-animals/02_dog-cost.html)
+ - [Insurance](https://rpanczak.github.io/FUN_BCC-animals/03_dog-insurance.html)
 
 ## Analyses of complaints & SEIFA
 
