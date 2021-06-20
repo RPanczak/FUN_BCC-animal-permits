@@ -15,6 +15,8 @@ output:
     toc_float: yes
 editor_options: 
   chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
 ---
 
 <!-- ------------------------------------------------------------ --> 
@@ -511,7 +513,7 @@ tm_shape(SSC) +
 
 # Dog cost 
 
-```{r}
+```{r eval=FALSE}
 dog_cost <- read_xlsx("data-raw/costs/dog_expensive.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -534,6 +536,10 @@ dog_cost <- read_xlsx("data-raw/costs/dog_expensive.xlsx") %>%
   arrange(dog_breed)
 
 write_rds(dog_cost, "data/costs/dog_cost.Rds")
+```
+
+```{r}
+dog_cost <- read_rds("data/costs/dog_cost.Rds")
 ```
 
 Top 20 most expensive dogs (+3 synonyms!)
