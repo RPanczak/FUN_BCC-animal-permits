@@ -1,0 +1,124 @@
+---
+title: "Principal Component Analysis"
+author: "Dataset data"
+output:
+  html_document: default
+---
+This dataset contains 180 individuals and 19 variables.
+
+- - -
+
+```{r, echo = FALSE}
+library(FactoMineR)
+load('C:/external/FUN_BCC-animals/Workspace.RData')
+```
+### 1. Study of the outliers
+The analysis of the graphs does not detect any outlier.
+
+- - -
+
+### 2. Inertia distribution
+The inertia of the first dimensions shows if there are strong relationships between variables and suggests the number of dimensions that should be studied.
+
+The first two dimensions of analyse express **96.08%** of the total dataset inertia ; that means that 96.08% of the individuals (or variables) cloud total variability is explained by the plane.
+This percentage is particularly high and thus the first plane perfectly represents the data variability.
+This value is strongly greater than the reference value that equals **17.74%**, the variability explained by this plane is thus highly significant
+(the reference value is the 0.95-quantile of the inertia percentages distribution obtained by simulating 2904 data tables of equivalent size on the basis of a normal distribution).
+
+From these observations, it is absolutely not necessary to interpret the next dimensions.
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+par(mar = c(2.6, 4.1, 1.1, 2.1))
+ggplot2::ggplot(cbind.data.frame(x=1:nrow(res$eig),y=res$eig[,2])) + ggplot2::aes(x=x, y=y)+ ggplot2::geom_col(fill="blue") + ggplot2::xlab("Dimension") + ggplot2::ylab("Percentage of variance") + ggplot2::ggtitle("Decomposition of the total inertia") + ggplot2::theme_light() + ggplot2::theme(plot.title = ggplot2::element_text(hjust =0.5)) + ggplot2::scale_x_continuous(breaks=1:nrow(res$eig))
+```
+
+**Figure 2 - Decomposition of the total inertia**
+*The first factor is largely dominant: it expresses itself 90.18% of the data variability.*
+*Note that in such a case, the variability related to the other components might be meaningless, despite of a high percentage.*
+
+An estimation of the right number of axis to interpret suggests to restrict the analysis to the description of the first 1 axis.
+These axis present an amount of inertia greater than those obtained by the 0.95-quantile of random distributions (90.18% against 9.41%).
+This observation suggests that only this axis is carrying a real information.
+As a consequence, the description will stand to these axis.
+
+- - -
+
+### 3. Description of the dimension 1
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("59", "20", "34", "83", "77", "165", "60")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = c(1,2), choix = 'ind', invisible = 'quali', title = '', cex = cex)
+```
+
+**Figure 3.1 - Individuals factor map (PCA)**
+*The labeled individuals are those with the higher contribution to the plane construction.*
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("maltese", "german_shepherd", "rottweiler", "french_bulldog", 
+"british_bulldog", "irish_wolfhound", "dogue_de_bordeaux")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = 1:2, choix = 'var', title = '', cex = cex)
+```
+
+**Figure 3.2 - Variables factor map (PCA)**
+*The labeled variables are those the best shown on the plane.*
+
+* * *
+
+The **dimension 1** opposes individuals such as *59*, *20*, *165*, *83* and *77* (to the right of the graph, characterized by a strongly positive coordinate on the axis)
+to individuals such as ** and *34* (to the left of the graph, characterized by a strongly negative coordinate on the axis).
+
+The group in which the individuals *165*, *83* and *77* stand (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for the variables *maltese*, *german_shepherd*, *rottweiler*, *british_bulldog*, *french_bulldog*, *akita*, *irish_wolfhound*, *yorkshire_terrier*, *samoyed* and *chinese_crested_dog* (variables are sorted from the strongest).
+
+The group in which the individuals *59* and *20* stand (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for the variables *german_shepherd*, *maltese*, *rottweiler*, *dogue_de_bordeaux*, *french_bulldog*, *chinese_crested_dog*, *irish_wolfhound* and *british_bulldog* (variables are sorted from the strongest).
+
+The group in which the individual *34* stands (characterized by a negative coordinate on the axis) is sharing :
+
+- low values for variables like *maltese*, *german_shepherd*, *rottweiler*, *british_bulldog*, *french_bulldog*, *irish_wolfhound*, *akita*, *yorkshire_terrier*, *dogue_de_bordeaux* and *chinese_crested_dog* (variables are sorted from the weakest).
+
+Note that the variable *maltese* is highly correlated with this dimension (correlation of 0.99). This variable could therefore summarize itself the dimension 1.
+
+- - -
+
+### 4. Classification
+
+```{r, echo = FALSE}
+res.hcpc = HCPC(res, nb.clust = -1, graph = FALSE)
+```
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("59", "20", "34", "83", "77", "165", "60")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.HCPC(res.hcpc, choice = 'map', draw.tree = FALSE, select = drawn, title = '')
+```
+
+**Figure 4 - Ascending Hierarchical Classification of the individuals.**
+*The classification made on individuals reveals 3 clusters.*
+
+
+The **cluster 1** is made of individuals such as *34* and *60*. This group is characterized by :
+
+- low values for variables like *maltese*, *german_shepherd*, *rottweiler*, *british_bulldog*, *irish_wolfhound*, *dogue_de_bordeaux*, *akita*, *yorkshire_terrier*, *chow_chow* and *samoyed* (variables are sorted from the weakest).
+
+The **cluster 2** is made of individuals such as *77* and *83*. This group is characterized by :
+
+- high values for the variables *maltese*, *german_shepherd*, *rottweiler*, *british_bulldog*, *irish_wolfhound*, *akita*, *chow_chow* and *dogue_de_bordeaux* (variables are sorted from the strongest).
+
+The **cluster 3** is made of individuals such as *20*, *59* and *165*. This group is characterized by :
+
+- high values for the variables *maltese*, *german_shepherd*, *rottweiler*, *dogue_de_bordeaux*, *yorkshire_terrier*, *british_bulldog*, *samoyed*, *french_bulldog* and *canadian_eskimo_dog* (variables are sorted from the strongest).
+
+- - -
+
+## Annexes
+
+
+

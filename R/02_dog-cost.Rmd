@@ -27,9 +27,9 @@ options(max.print = "75")
 
 library(pacman)
 p_load(tidyverse, magrittr, scales, stringr,
-       sjmisc, DT,
+       sjmisc, sjPlot, DT,
        sf, tmap,
-       correlation, see, modelbased)
+       correlation, see, modelbased, parameters)
 
 tmap_mode("view") # makes map interactive
 
@@ -75,6 +75,9 @@ length(unique(dog_ownership_cost$dog_breed))
 SSC <- read_rds("data/geo/SSC.Rds")
 
 length(unique(SSC$SSC_NAME16))
+
+wide_cost_n <- read_rds("data/wide_cost_n.Rds")
+wide_cost_p <- read_rds("data/wide_cost_p.Rds")
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -349,6 +352,164 @@ seifa_plot(IEO_d)
 seifa_means(IEO_d_orig)
 seifa_cor(IEO_d_orig)
 seifa_plot(IEO_d_orig)
+```
+
+<!-- ----------------------------------------------------- -->
+
+# PCA
+
+<!-- https://stats.stackexchange.com/questions/53/pca-on-correlation-or-covariance -->
+
+```{r}
+data <- 
+  # wide_cost_n %>%
+  wide_cost_p %>%
+  st_drop_geometry() %>% 
+  select(akita:last_col()) %>% 
+  as_tibble()
+
+# View(cov(data))
+```
+
+
+```{r}
+pca <- principal_components(data, 
+                            standardize = FALSE,
+                            n = "auto")
+pca
+
+summary(pca)
+
+plot(pca)
+
+pca_results <- wide_cost_p %>%
+  st_drop_geometry() %>% 
+  as_tibble() %>% 
+  select(SSC_CODE16:caution) %>% 
+  mutate(pca_raw = predict(pca)$Component_1, 
+         pca = ntile(pca_raw, 10)) 
+```
+
+```{r eval=FALSE, include=FALSE}
+p_load(FactoMineR, FactoInvestigate, Factoshiny)
+
+res.pca <- PCA(data, 
+               scale.unit = FALSE,
+               ncp = 5, graph = T)
+
+# wide_cost_p[20, 2:17] %>% st_drop_geometry()
+
+summary(res.pca)
+
+# dimdesc(res.pca, axes=c(1,2))
+
+Investigate(res.pca)
+
+# resshiny <- PCAshiny(res.pca)
+```
+
+## `IRSD_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IRSD, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IRSD_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IRSD_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IRSD_d, pca_results$pca)
+
+assocplot(tabz,
+          xlab = "IRSD_d", ylab = "pca")
+
+mosaicplot(tabz,
+           xlab = "IRSD_d", ylab = "pca")
+```
+
+## `IRSAD_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IRSAD, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IRSAD_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IRSAD_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IRSAD_d, pca_results$IRSAD_d_orig)
+
+assocplot(tabz,
+          xlab = "IRSAD_d", ylab = "pca")
+
+mosaicplot(tabz,
+           xlab = "IRSAD_d", ylab = "pca")
+```
+
+## `IER_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IER, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IER_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IER_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IER_d, pca_results$pca)
+
+assocplot(tabz,
+          xlab = "IER_d", ylab = "pca")
+
+mosaicplot(tabz,
+           xlab = "IER_d", ylab = "pca")
+```
+
+## `IEO_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IEO, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IEO_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IEO_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IEO_d, pca_results$pca)
+
+assocplot(tabz,
+          xlab = "IEO_d", ylab = "IEO_d_orig")
+
+mosaicplot(tabz,
+           xlab = "IEO_d", ylab = "IEO_d_orig")
 ```
 
 <!-- ----------------------------------------------------- -->
