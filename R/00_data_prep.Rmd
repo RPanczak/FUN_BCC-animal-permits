@@ -560,8 +560,7 @@ Data scraped from https://top10petinsurance.com.au/pet-insurance-prices on the 3
 # packages needed
 # install.packages("rvest")
 
-library(rvest)
-library(tidyverse)
+p_load(rvest, tidyverse)
 
 # scraping table done with this using chrome: https://www.r-bloggers.com/using-rvest-to-scrape-an-html-table/
 url <- 'https://top10petinsurance.com.au/pet-insurance-prices/'   
@@ -629,12 +628,22 @@ dog_insurance %>%
 
 ## Individual breeds
 
-Breeds in `Above average` and `Significantly above average` categories:
+Breeds in `Significantly above average` category:  
 
 ```{r}
 dog_insurance %>% 
-  select(dog_breed, average_comprehensive_policy_cost_annual, cost_compared_to_other_breeds) %>% 
-  filter(cost_compared_to_other_breeds != "Below average") %>% 
+  filter(cost_compared_to_other_breeds == "Significantly above average") %>% 
+  select(dog_breed, average_comprehensive_policy_cost_annual) %>%  arrange(desc(average_comprehensive_policy_cost_annual)) %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+Breeds in `Above average` category:  
+
+```{r}
+dog_insurance %>% 
+  filter(cost_compared_to_other_breeds == "Above average") %>% 
+  select(dog_breed, average_comprehensive_policy_cost_annual) %>% 
   arrange(desc(average_comprehensive_policy_cost_annual)) %>% 
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
@@ -652,13 +661,12 @@ Raw dataset consists of `r comma(nrow(dog_ownership))` records.
 
 ## Data selection 
 
-Excluding records with `permit_name`: *Breeders Permit*, *Cattery Permit*, *Racehorses Permit*, *Pet Shop Permit*, *Domestic Dog Permit* & *Guard Dog Permit*.
+**Excluding** records with:  
 
-Excluding records without neighbourhood.  
-
-Excluding records without `dog_breed` values.  
-
-Excluding records with `dog_breed` listed as *Unknown* or *Cross*.  
+  - `permit_name`: *Breeders Permit*, *Cattery Permit*, *Racehorses Permit*, *Pet Shop Permit*, *Domestic Dog Permit* & *Guard Dog Permit*  
+  - without neighbourhood  
+  - without `dog_breed` values  
+  - with `dog_breed` listed as *Unknown* or *Cross*  
 
 *Stones Corner* values were assigned to *Greenslopes* SSC (see information in section above).  
 
@@ -844,8 +852,8 @@ dog_ownership_cost %>%
 
 Two largest groups:  
 
-*Pointer* - insufficient info!  
-*Akita* - insufficient info! Could be Inu, could be Japanese  
+  - *Pointer* - insufficient info!  
+  - *Akita* - insufficient info! Could be Inu, could be Japanese  
 
 These observations will remain as `NA`s.  
 
