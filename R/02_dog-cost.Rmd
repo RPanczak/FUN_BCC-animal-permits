@@ -517,6 +517,169 @@ mosaicplot(tabz,
 
 <!-- ----------------------------------------------------- -->
 
+# Clustering 
+
+```{r}
+data <- 
+  wide_cost_p %>%
+  st_drop_geometry() %>% 
+  select(akita:last_col()) %>% 
+  as_tibble()
+```
+
+## No of clusters
+
+```{r}
+n <- n_clusters(data, package = c("easystats", "NbClust", "mclust"))
+n
+plot(n)
+```
+
+## K-Means
+
+```{r}
+rez_kmeans <- cluster_analysis(data, n = 2, method = "kmeans")
+
+rez_kmeans
+
+plot(rez_kmeans)
+
+plot(summary(rez_kmeans))
+```
+
+```{r}
+cluster_results <- wide_cost_p %>%
+  st_drop_geometry() %>% 
+  as_tibble() %>% 
+  mutate(cluster = predict(rez_kmeans)) 
+
+aggregate(data = cluster_results, german_shepherd ~ cluster, mean)
+aggregate(data = cluster_results, french_bulldog ~ cluster, mean) 
+# aggregate(data = cluster_results, maltese ~ cluster, mean)
+# aggregate(data = cluster_results, rottweiler ~ cluster, mean)
+```
+
+```{r echo=FALSE}
+cluster_results_map <- 
+  left_join(SSC, 
+            cluster_results %>% 
+              select(SSC_CODE16, cluster))
+
+tm_shape(cluster_results_map) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "cluster",
+             # palette = "BrBG",
+             border.col = NA)
+```
+
+## Hierarchical Clustering
+
+```{r}
+rez_hclust <- cluster_analysis(data, n = 2, method = "hclust")
+
+rez_hclust
+
+plot(rez_hclust)
+```
+
+## Hierarchical K-Means
+
+```{r}
+rez_hkmeans <- cluster_analysis(data, n = 2, method = "hkmeans")
+
+rez_hkmeans
+
+plot(rez_hkmeans)
+```
+
+## K-Medoids (PAM)
+
+```{r}
+rez_pam <- cluster_analysis(data, n = 2, method = "pam")
+
+rez_pam
+
+plot(rez_pam)
+```
+
+## Bootstrapped Hierarchical Clustering
+
+```{r}
+rez_hclust2 <- cluster_analysis(data, 
+                                n = NULL, 
+                                method = "hclust", 
+                                iterations = 500,
+                                ci = 0.90)
+
+rez_hclust2
+
+plot(rez_hclust2)
+```
+
+## DBSCAN
+
+```{r}
+eps <- n_clusters_dbscan(data, min_size = 0.01) 
+
+eps
+
+plot(eps)
+
+rez_dbscan <- cluster_analysis(data, method = "dbscan", dbscan_eps = 5)
+
+rez_dbscan
+
+plot(rez_dbscan)
+```
+
+## Hierarchical K-Means
+
+```{r}
+rez_hdbscan <- cluster_analysis(data, method = "hdbscan")
+
+rez_hdbscan
+
+# plot(rez_hdbscan)
+```
+
+## K-Medoids with estimation of number of clusters (pamk)
+
+```{r}
+rez_pamk <- cluster_analysis(data, method = "pamk")
+
+rez_pamk 
+
+plot(rez_pamk)
+```
+
+
+## Mixture
+
+```{r}
+p_load(mclust)
+
+rez_mixture <- cluster_analysis(data, method = "mixture")
+
+rez_mixture
+
+plot(rez_mixture)
+```
+
+## Metaclustering
+
+```{r}
+list_of_results <- list(rez_kmeans, rez_hclust, rez_hkmeans, rez_pam,
+                        rez_hclust2, rez_dbscan, rez_hdbscan, rez_mixture)
+
+probability_matrix <- cluster_meta(list_of_results)
+
+heatmap(probability_matrix, scale = "none", 
+        col = grDevices::hcl.colors(256, palette = "inferno"))
+```
+
+<!-- ----------------------------------------------------- -->
+
 # Computing Environment
 
 `r mu$session()`
