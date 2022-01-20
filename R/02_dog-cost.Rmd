@@ -403,7 +403,10 @@ summary(res.pca)
 
 # dimdesc(res.pca, axes=c(1,2))
 
-Investigate(res.pca)
+Investigate(res.pca, 
+            file = "docs/FactoInvestigate.Rmd", keepRmd = TRUE)
+
+ff::file.move("docs/FactoInvestigate.Rmd", "../R")
 
 # resshiny <- PCAshiny(res.pca)
 ```
