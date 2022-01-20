@@ -912,7 +912,7 @@ wide_all_p <- dog_ownership_cost %>%
   summarise(n = n()) %>% 
   ungroup() %>% 
   group_by(SSC_NAME16) %>% 
-  mutate(N = n()) %>% 
+  mutate(N = sum(n)) %>% 
   ungroup() %>% 
   mutate(p = n/N) %>% 
   select(-n, -N) %>% 
@@ -947,7 +947,7 @@ wide_cost_p <- dog_ownership_cost %>%
   summarise(n = n()) %>% 
   ungroup() %>% 
   group_by(SSC_NAME16) %>% 
-  mutate(N = n()) %>% 
+  mutate(N = sum(n)) %>% 
   ungroup() %>% 
   mutate(p = n/N) %>% 
   select(-n, -N) %>% 
@@ -982,7 +982,7 @@ wide_insurance_p <- dog_ownership_cost %>%
   summarise(n = n()) %>% 
   ungroup() %>% 
   group_by(SSC_NAME16) %>% 
-  mutate(N = n()) %>% 
+  mutate(N = sum(n)) %>% 
   ungroup() %>% 
   mutate(p = n/N) %>% 
   select(-n, -N) %>% 
