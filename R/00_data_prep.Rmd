@@ -28,8 +28,8 @@ options(max.print = "75")
 
 library(pacman)
 p_load(tidyverse, readxl, magrittr, scales,
-       janitor, sjmisc, sjPlot, kableExtra,
-       sf, tmap, rmapshaper)
+       janitor, sjmisc, sjPlot, DT, gmodels,
+       sf, tmap)
 
 tmap_mode("view") # makes map interactive
 
@@ -79,27 +79,18 @@ SUB <- read_csv("data-raw/geo/suburb-and-adjoining-suburb-november-2019.zip") %>
 write_rds(SUB, "data/geo/clean/SUB.Rds")
 ```
 
-Full (**hopefully**) list of Brisbane suburbs. Top 5 alphabetically:
-
-```{r}
+```{r include=FALSE}
 SUB <- read_rds("data/geo/SUB.Rds")
 
 # glimpse(SUB)
-
-SUB %>% 
-  slice(1:5) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 This might very well include areas with no pops (and therefore no SEIFA), for instance:
 
-```{r}
+```{r echo=FALSE}
 SUB %>% 
   filter(str_detect(SSC_NAME16, 
-                    regex("port", ignore_case = TRUE))) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+                    regex("port", ignore_case = TRUE)))
 ```
 
 ## ABS
@@ -128,42 +119,44 @@ SSC <- st_read("data-raw/geo/1270055003_ssc_2016_aust_shape/SSC_2016_AUST.shp",
   mutate(SSC_NAME16 = ifelse(SSC_NAME16 == "Mount Coot-tha",
                              "Mount Coot-Tha", SSC_NAME16))
 
-# SSC <- ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
+# SSC <- rmapshaper::ms_simplify(SSC, keep = 0.05, weighting = 0.7) # default settings
 
 write_rds(SSC, "data/geo/SSC_2016_AUST.Rds")
 
 unlink("data-raw/geo/1270055003_ssc_2016_aust_shape", recursive = TRUE)
 ```
 
-Areas without matches using original names
-
-```{r}
+```{r include=FALSE}
 SSC <- read_rds("data/geo/SSC_2016_AUST.Rds")
+```
 
+```{r eval=FALSE, include=FALSE}
 SUB %>% 
   left_join(SSC) %>% 
   select(-geometry) %>% 
-  filter(SSC_NAME16 != SSC_NAME16_orig) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  filter(SSC_NAME16 != SSC_NAME16_orig) 
 ```
 
 `Stones Corner` doesn't exist in ABS but it does in BCC. It seems it's part of [`Greenslopes`](https://quickstats.censusdata.abs.gov.au/census_services/getproduct/census/2016/quickstat/SSC31254?opendocument).
 
-```{r}
+```{r echo=FALSE}
 SUB %>% 
   left_join(SSC) %>% 
   select(-geometry) %>% 
   filter(is.na(SSC_CODE16))
 ```
 
-Full map
+After clean the datasets were merged.  
 
-```{r}
+```{r echo=FALSE}
 SSC %<>% 
   right_join(SUB) %>%
   filter(SSC_NAME16 != "Stones Corner")
+```
 
+Full map
+
+```{r echo=FALSE}
 # SSC %>% 
 #   plot(max.plot = 1)
 
@@ -236,7 +229,7 @@ unlink("data-raw/geo/QSC_Extracted_Data_20190816_111155192000-13108", recursive 
 
 # SEIFA
 
-```{r eval=FALSE}
+```{r message=FALSE, warning=FALSE}
 SEIFA <- read_xls("data-raw/SEIFA/2033055001 - ssc indexes.xls", 
                   sheet = "Table 1", skip = 5, n_max = 13719, na = "-") %>% 
   clean_names() %>%
@@ -253,6 +246,7 @@ SEIFA <- read_xls("data-raw/SEIFA/2033055001 - ssc indexes.xls",
                 IEO_d = decile_10,
                 URP = x11,
                 caution = x12) %>% 
+  # deciles kept as integers here
   mutate(SSC_CODE16 = as.integer(SSC_CODE16),
          IRSD = as.integer(IRSD),
          IRSAD = as.integer(IRSAD),
@@ -265,60 +259,91 @@ SEIFA <- read_xls("data-raw/SEIFA/2033055001 - ssc indexes.xls",
          URP = as.integer(URP)
   ) %>% 
   mutate(caution = as.logical(ifelse(is.na(caution), "False", "True")))
+```
 
+```{r include=FALSE}
 write_rds(SEIFA, "data/SEIFA/SEIFA.Rds")
-```
 
-```{r}
-SEIFA <- read_rds("data/SEIFA/SEIFA.Rds")
-```
-
-## Coverage
-
-### Data for Australia, example of IRSD.
-
-```{r}
 SEIFA %<>% 
   select(-SSC_NAME16)
 
-frq(SEIFA$IRSD_d)
-
-SEIFA %>% 
-  ggplot(aes(x = IRSD_d)) + 
-  geom_bar() 
-
-SEIFA %>% 
-  ggplot(aes(x = as.factor(IRSD_d), y = IRSD)) + 
-  geom_boxplot(varwidth = TRUE) 
-```
-
-### Brisbane suburbs only 
-
-```{r}
 SSC %<>% 
   left_join(SEIFA) 
 
 # SSC %>% 
 #   st_drop_geometry() %>% 
 #   glimpse()
+```
 
+## Coverage 
+
+Comparing Australia & Brisbane, example of IRSD.
+
+### Frequencies {.tabset}
+
+#### Australia 
+
+```{r echo=FALSE}
+frq(SEIFA$IRSD_d)
+```
+
+#### Brisbane  
+
+```{r echo=FALSE}
 frq(SSC$IRSD_d)
+```
 
+### Frequencies {.tabset}
+
+#### Australia 
+
+```{r echo=FALSE}
+SEIFA %>% 
+  filter(!is.na(IRSD_d)) %>% 
+  ggplot(aes(x = as.factor(IRSD_d))) + 
+  geom_bar(aes(y = (..count..)/sum(..count..))) + 
+  scale_y_continuous(labels = scales::percent) +
+  ylab("% of areas")
+```
+
+#### Brisbane  
+
+```{r echo=FALSE}
 SSC %>% 
-  ggplot(aes(x = IRSD_d)) + 
-  geom_bar() 
+  filter(!is.na(IRSD_d)) %>% 
+  ggplot(aes(x = as.factor(IRSD_d))) + 
+  geom_bar(aes(y = (..count..)/sum(..count..))) + 
+  scale_y_continuous(labels = scales::percent) +
+  ylab("% of areas")
+```
 
+### Frequencies {.tabset}
+
+#### Australia 
+
+```{r echo=FALSE}
+SEIFA %>% 
+  filter(!is.na(IRSD_d)) %>% 
+  ggplot(aes(x = as.factor(IRSD_d), y = IRSD)) + 
+  geom_boxplot(varwidth = TRUE) + 
+  ylim(min(SEIFA$IRSD, na.rm = TRUE), max(SEIFA$IRSD, na.rm = TRUE))
+```
+
+#### Brisbane  
+
+```{r echo=FALSE}
 SSC %>% 
   filter(!is.na(IRSD_d)) %>% 
   ggplot(aes(x = as.factor(IRSD_d), y = IRSD)) + 
-  geom_boxplot(varwidth = TRUE) 
+  geom_boxplot(varwidth = TRUE) + 
+  ylim(min(SEIFA$IRSD, na.rm = TRUE), max(SEIFA$IRSD, na.rm = TRUE))
 ```
 
 ## Missing
 
 Few areas with missing SEIFA
 
-```{r}
+```{r echo=FALSE}
 SSC %>% 
   st_drop_geometry() %>% 
   filter_at(vars(ends_with("_d")), 
@@ -328,7 +353,7 @@ SSC %>%
 
 These were excluded.
 
-```{r}
+```{r include=FALSE}
 SSC %<>% 
   filter_at(vars(ends_with("_d")), all_vars(!is.na(.))) 
 ```
@@ -337,24 +362,26 @@ SSC %<>%
 
 Few cases with ABS flag `caution`.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 frq(SSC$caution)
+```
+
+```{r echo=FALSE}
+SSC %>% 
+  st_drop_geometry() %>% 
+  filter(caution) %>% 
+  select(-caution, -SSC_CODE16, -SSC_NAME16_orig)
 ```
 
 Usually with very small pop numbers.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 SSC %>% 
   st_drop_geometry() %>% 
   group_by(caution) %>% 
   summarise(mean = mean(URP),
             min = min(URP),
             max = max(URP))
-
-SSC %>% 
-  st_drop_geometry() %>% 
-  filter(caution) %>% 
-  select(-caution, -SSC_CODE16, -SSC_NAME16_orig)
 ```
 
 These remain included.
@@ -372,23 +399,33 @@ SSC %<>%
          IER_d_orig = IER_d,
          IER_d = ntile(IER, 10),
          IEO_d_orig = IEO_d,
-         IEO_d = ntile(IEO, 10))
+         IEO_d = ntile(IEO, 10)) %>% 
+  mutate(across(ends_with("_d"), factor)) %>% 
+  mutate(across(ends_with("_d_orig"), factor)) %>% 
+  relocate(IRSD_d_orig, .after = IRSD_d) %>% 
+  relocate(IRSAD_d_orig, .after = IRSAD_d) %>% 
+  relocate(IER_d_orig, .after = IER_d) %>% 
+  relocate(IEO_d_orig, .after = IEO_d) 
 
 write_rds(SSC, "data/geo/SSC.Rds")
 ```
 
+Note: Deciles are represented as `factor` variable. Certain application could benefit from changing it to `ordered`?  
+
+Agreement across specific indices :  
+
 ### `IRSD_d` 
 
-```{r}
+```{r echo=FALSE}
 # frq(SSC$IRSD_d_orig)
 # frq(SSC$IRSD_d)
 
 SSC %>% 
   st_drop_geometry() %>% 
-  tabyl(IRSD_d_orig, IRSD_d)
+  frq(IRSD_d_orig == IRSD_d)
 ```
 
-```{r}
+```{r echo=FALSE}
 plot_xtab(SSC$IRSD_d, SSC$IRSD_d_orig, 
           margin = "row", bar.pos = "stack",
           show.summary = TRUE, coord.flip = TRUE)
@@ -402,7 +439,7 @@ mosaicplot(tabz,
            xlab = "IRSD_d", ylab = "IRSD_d_orig")
 ```
 
-```{r}
+```{r echo=FALSE}
 tm_shape(SSC) +
   tm_polygons(col = c("IRSD_d", "IRSD_d_orig"),
               n = 10, palette = "div",
@@ -412,16 +449,16 @@ tm_shape(SSC) +
 
 ### `IRSAD_d` 
 
-```{r}
+```{r echo=FALSE}
 # frq(SSC$IRSAD_d_orig)
 # frq(SSC$IRSAD_d)
 
 SSC %>% 
   st_drop_geometry() %>% 
-  tabyl(IRSAD_d_orig, IRSAD_d)
+  frq(IRSAD_d_orig == IRSAD_d)
 ```
 
-```{r}
+```{r echo=FALSE}
 plot_xtab(SSC$IRSAD_d, SSC$IRSAD_d_orig, 
           margin = "row", bar.pos = "stack",
           show.summary = TRUE, coord.flip = TRUE)
@@ -435,7 +472,7 @@ mosaicplot(tabz,
            xlab = "IRSAD_d", ylab = "IRSAD_d_orig")
 ```
 
-```{r}
+```{r echo=FALSE}
 tm_shape(SSC) +
   tm_polygons(col = c("IRSAD_d", "IRSAD_d_orig"),
               n = 10, palette = "div",
@@ -445,16 +482,16 @@ tm_shape(SSC) +
 
 ### `IER_d` 
 
-```{r}
+```{r echo=FALSE}
 # frq(SSC$IER_d_orig)
 # frq(SSC$IER_d)
 
 SSC %>% 
   st_drop_geometry() %>% 
-  tabyl(IER_d_orig, IER_d)
+  frq(IER_d_orig == IER_d)
 ```
 
-```{r}
+```{r echo=FALSE}
 plot_xtab(SSC$IER_d, SSC$IER_d_orig, 
           margin = "row", bar.pos = "stack",
           show.summary = TRUE, coord.flip = TRUE)
@@ -468,7 +505,7 @@ mosaicplot(tabz,
            xlab = "IER_d", ylab = "IER_d_orig")
 ```
 
-```{r}
+```{r echo=FALSE}
 tm_shape(SSC) +
   tm_polygons(col = c("IER_d", "IER_d_orig"),
               n = 10, palette = "div",
@@ -478,16 +515,16 @@ tm_shape(SSC) +
 
 ### `IEO_d` 
 
-```{r}
+```{r echo=FALSE}
 # frq(SSC$IEO_d_orig)
 # frq(SSC$IEO_d)
 
 SSC %>% 
   st_drop_geometry() %>% 
-  tabyl(IEO_d_orig, IEO_d)
+  frq(IEO_d_orig == IEO_d)
 ```
 
-```{r}
+```{r echo=FALSE}
 plot_xtab(SSC$IEO_d, SSC$IEO_d_orig, 
           margin = "row", bar.pos = "stack",
           show.summary = TRUE, coord.flip = TRUE)
@@ -501,7 +538,7 @@ mosaicplot(tabz,
            xlab = "IEO_d", ylab = "IEO_d_orig")
 ```
 
-```{r}
+```{r echo=FALSE}
 tm_shape(SSC) +
   tm_polygons(col = c("IEO_d", "IEO_d_orig"),
               n = 10, palette = "div",
@@ -513,7 +550,7 @@ tm_shape(SSC) +
 
 # Dog cost 
 
-```{r eval=FALSE}
+```{r}
 dog_cost <- read_xlsx("data-raw/costs/dog_expensive.xlsx") %>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -534,20 +571,17 @@ dog_cost <- read_xlsx("data-raw/costs/dog_expensive.xlsx") %>%
   add_row(dog_breed = "British Bulldog") %>% 
   mutate(expensive = "yes") %>% 
   arrange(dog_breed)
-
-write_rds(dog_cost, "data/costs/dog_cost.Rds")
 ```
 
-```{r}
-dog_cost <- read_rds("data/costs/dog_cost.Rds")
+```{r include=FALSE}
+write_rds(dog_cost, "data/costs/dog_cost.Rds")
 ```
 
 Top 20 most expensive dogs (+3 synonyms!)
 
-```{r}
+```{r echo=FALSE}
 dog_cost %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  datatable()
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -577,7 +611,7 @@ head(dog_insurance)
 write_rds(dog_insurance, "data-raw/costs/dog_insurance.Rds") # extracted on the 30 March 2020
 ```
 
-```{r eval=FALSE}
+```{r}
 dog_insurance <- read_rds("data-raw/costs/dog_insurance.Rds") %>% 
   as_tibble() %>% 
   clean_names() %>%
@@ -609,68 +643,62 @@ dog_insurance <- read_rds("data-raw/costs/dog_insurance.Rds") %>%
                            average_comprehensive_policy_cost_annual, 
                            fixed = TRUE))
   )
-
-write_rds(dog_insurance, "data/costs/dog_insurance.Rds") 
 ```
 
-```{r}
-dog_insurance <- read_rds("data/costs/dog_insurance.Rds") 
+```{r include=FALSE}
+write_rds(dog_insurance, "data/costs/dog_insurance.Rds") 
 ```
 
 ## Three major categories
 
-```{r}
+```{r echo=FALSE}
 dog_insurance %>% 
-  frq(cost_compared_to_other_breeds) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  frq(cost_compared_to_other_breeds) 
 ```
 
 ## Individual breeds
 
 Breeds in `Significantly above average` category:  
 
-```{r}
+```{r echo=FALSE}
 dog_insurance %>% 
   filter(cost_compared_to_other_breeds == "Significantly above average") %>% 
   select(dog_breed, average_comprehensive_policy_cost_annual) %>%  arrange(desc(average_comprehensive_policy_cost_annual)) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  datatable()
 ```
 
 Breeds in `Above average` category:  
 
-```{r}
+```{r echo=FALSE}
 dog_insurance %>% 
   filter(cost_compared_to_other_breeds == "Above average") %>% 
   select(dog_breed, average_comprehensive_policy_cost_annual) %>% 
   arrange(desc(average_comprehensive_policy_cost_annual)) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  datatable()
 ```
 
 <!-- ------------------------------------------------------------ --> 
 
 # Dog ownership in Brisbane
 
-```{r}
+```{r include=FALSE}
 dog_ownership <- read_csv("data-raw/permits/cars-bis-open-data-animal-permits-3-jan-2019.zip")
 ```
 
-Raw dataset consists of `r comma(nrow(dog_ownership))` records.
+Raw dataset named `cars-bis-open-data-animal-permits-3-jan-2019` consists of `r comma(nrow(dog_ownership))` records.  
 
 ## Data selection 
 
 **Excluding** records with:  
 
-  - `permit_name`: *Breeders Permit*, *Cattery Permit*, *Racehorses Permit*, *Pet Shop Permit*, *Domestic Dog Permit* & *Guard Dog Permit*  
-  - without neighbourhood  
-  - without `dog_breed` values  
-  - with `dog_breed` listed as *Unknown* or *Cross*  
+- `permit_name`: *Breeders Permit*, *Cattery Permit*, *Racehorses Permit*, *Pet Shop Permit*, *Domestic Dog Permit* & *Guard Dog Permit*  
+- without neighbourhood  
+- without `dog_breed` values  
+- with `dog_breed` listed as *Unknown* or *Cross*  
 
-*Stones Corner* values were assigned to *Greenslopes* SSC (see information in section above).  
+*Stones Corner* values were assigned to *Greenslopes* SSC (see information in section above).   
 
-```{r eval=FALSE}
+```{r}
 dog_ownership %<>% 
   clean_names() %>%
   remove_empty(c("rows", "cols")) %>% 
@@ -703,13 +731,13 @@ dog_ownership %<>%
       
       TRUE ~ as.character(dog_breed))
   ) 
+```
 
+```{r include=FALSE}
 write_rds(dog_ownership, "data/permits/dog_ownership.Rds") 
 ```
 
-```{r}
-dog_ownership <- read_rds("data/permits/dog_ownership.Rds") 
-```
+Prepared dataset consists of `r comma(nrow(dog_ownership))` records.  
 
 ```{r eval=FALSE, include=FALSE}
 # checking domestic dogs
@@ -724,22 +752,22 @@ test <- dog_ownership %>%
   mutate(perc = (ind/total)*100)
 ```
 
-`r comma(nrow(dog_ownership))` records after exclusions. 
-
 ## Data merging - `dog_cost`
 
 ```{r}
-dog_ownership_cost <- left_join(dog_ownership, dog_cost, by = "dog_breed")
-
-# binary indicator "expensive" and "non-expensive" dog breeds according to dog_cost
-dog_ownership_cost %<>% 
+dog_ownership_cost <- left_join(dog_ownership, dog_cost, by = "dog_breed") %>% 
+  # binary indicator "expensive" and "non-expensive" dog breeds according to dog_cost
   mutate(
     expensive = case_when(
       is.na(expensive) ~ 0,
       expensive == "yes" ~ 1
     )
   )
+```
 
+Expensive dogs in Brisbane:  
+
+```{r echo=FALSE}
 frq(dog_ownership_cost, expensive)
 ```
 
@@ -796,15 +824,14 @@ dog_insurance %<>%
 
 Dog breeds without match 
 
-```{r}
+```{r echo=FALSE}
 dog_ownership_cost %>% anti_join(
   dog_insurance %>% select(dog_breed, cost_compared_to_other_breeds)
 ) %>%
   group_by(dog_breed) %>%
   summarize(n = n()) %>%
   arrange(desc(n)) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  datatable() 
 ```
 
 Some further corrections still possible here:
@@ -835,29 +862,29 @@ dog_ownership_cost <-  left_join(dog_ownership_cost,
       
       # naming - Dogue De Bordeaux
       dog_breed == "French Mastiff" ~ "Significantly above average",
-      TRUE ~ as.character(cost_compared_to_other_breeds)))
+      TRUE ~ as.character(cost_compared_to_other_breeds))) %>% 
+  select(-permit_name)
 ```
 
 Few things left:  
 
-```{r}
+```{r echo=FALSE}
 dog_ownership_cost %>% 
   filter(is.na(cost_compared_to_other_breeds)) %>%
   group_by(dog_breed) %>%
   summarize(n = n()) %>%
   arrange(desc(n)) %>% 
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  datatable() 
 ```
 
 Two largest groups:  
 
-  - *Pointer* - insufficient info!  
-  - *Akita* - insufficient info! Could be Inu, could be Japanese  
+- *Pointer* - insufficient info!  
+- *Akita* - insufficient info! Could be Inu, could be Japanese  
 
 These observations will remain as `NA`s.  
 
-```{r}
+```{r include=FALSE}
 write_rds(dog_ownership_cost, "data/permits/dog_ownership_cost.Rds")
 ```
 
