@@ -885,7 +885,123 @@ Two largest groups:
 These observations will remain as `NA`s.  
 
 ```{r include=FALSE}
-write_rds(dog_ownership_cost, "data/permits/dog_ownership_cost.Rds")
+write_rds(dog_ownership_cost, "data/dog_ownership_cost.Rds")
+```
+
+<!-- ----------------------------------------------------- -->
+
+# Wide format datasets
+
+## All breeds
+
+```{r}
+wide_all_n <- dog_ownership_cost %>% 
+  group_by(SSC_NAME16, dog_breed) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = dog_breed, 
+              values_from = n) %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  clean_names() %>% 
+  rename(SSC_NAME16 = ssc_name16)
+
+wide_all_n <- right_join(SSC, wide_all_n)
+
+wide_all_p <- dog_ownership_cost %>% 
+  group_by(SSC_NAME16, dog_breed) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>% 
+  group_by(SSC_NAME16) %>% 
+  mutate(N = n()) %>% 
+  ungroup() %>% 
+  mutate(p = n/N) %>% 
+  select(-n, -N) %>% 
+  pivot_wider(names_from = dog_breed, 
+              values_from = p) %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  clean_names() %>% 
+  rename(SSC_NAME16 = ssc_name16)
+
+wide_all_p <- right_join(SSC, wide_all_p)
+```
+
+## Only expensive breeds (cost)
+
+```{r}
+wide_cost_n <- dog_ownership_cost %>% 
+  filter(expensive == 1) %>% 
+  group_by(SSC_NAME16, dog_breed) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = dog_breed, 
+              values_from = n) %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  clean_names() %>% 
+  rename(SSC_NAME16 = ssc_name16)
+
+wide_cost_n <- right_join(SSC, wide_cost_n)
+
+wide_cost_p <- dog_ownership_cost %>% 
+  filter(expensive == 1) %>% 
+  group_by(SSC_NAME16, dog_breed) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>% 
+  group_by(SSC_NAME16) %>% 
+  mutate(N = n()) %>% 
+  ungroup() %>% 
+  mutate(p = n/N) %>% 
+  select(-n, -N) %>% 
+  pivot_wider(names_from = dog_breed, 
+              values_from = p) %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  clean_names() %>% 
+  rename(SSC_NAME16 = ssc_name16)
+
+wide_cost_p <- right_join(SSC, wide_cost_p)
+```
+
+## Only expensive breeds (insurance)
+
+```{r}
+wide_insurance_n <- dog_ownership_cost %>% 
+  filter(cost_compared_to_other_breeds != "Below average") %>% 
+  group_by(SSC_NAME16, dog_breed) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = dog_breed, 
+              values_from = n) %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  clean_names() %>% 
+  rename(SSC_NAME16 = ssc_name16)
+
+wide_insurance_n <- right_join(SSC, wide_insurance_n)
+
+wide_insurance_p <- dog_ownership_cost %>% 
+  filter(cost_compared_to_other_breeds != "Below average") %>% 
+  group_by(SSC_NAME16, dog_breed) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>% 
+  group_by(SSC_NAME16) %>% 
+  mutate(N = n()) %>% 
+  ungroup() %>% 
+  mutate(p = n/N) %>% 
+  select(-n, -N) %>% 
+  pivot_wider(names_from = dog_breed, 
+              values_from = p) %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  clean_names() %>% 
+  rename(SSC_NAME16 = ssc_name16)
+
+wide_insurance_p <- right_join(SSC, wide_insurance_p)
+```
+
+```{r include=FALSE}
+write_rds(wide_all_n, "data/wide_all_n.Rds")
+write_rds(wide_all_p, "data/wide_all_p.Rds")
+write_rds(wide_cost_n, "data/wide_cost_n.Rds")
+write_rds(wide_cost_p, "data/wide_cost_p.Rds")
+write_rds(wide_insurance_n, "data/wide_insurance_n.Rds")
+write_rds(wide_insurance_p, "data/wide_insurance_p.Rds")
 ```
 
 <!-- ----------------------------------------------------- -->
