@@ -517,7 +517,7 @@ mosaicplot(tabz,
 
 <!-- ----------------------------------------------------- -->
 
-# Clustering 
+# Clustering I
 
 ```{r}
 data <- 
@@ -676,6 +676,72 @@ probability_matrix <- cluster_meta(list_of_results)
 
 heatmap(probability_matrix, scale = "none", 
         col = grDevices::hcl.colors(256, palette = "inferno"))
+```
+
+<!-- ----------------------------------------------------- -->
+
+# Clustering II
+
+```{r}
+data <- 
+  wide_cost_p %>%
+  st_drop_geometry() %>% 
+  select(akita:last_col()) %>% 
+  as_tibble()
+```
+
+```{r}
+p_load(mclust)
+
+BIC <- mclustBIC(data, G = seq(from = 2, to = 9))
+
+plot(BIC)
+
+# BIC
+summary(BIC)
+
+mod1 <- Mclust(data, x = BIC)
+mod1
+summary(mod1, parameters = TRUE)
+
+frq(mod1$classification)
+
+plot(mod1, what = "classification")
+
+ICL <- mclustICL(data, G = seq(from = 2, to = 9))
+summary(ICL)
+plot(ICL)
+
+# LRT <- mclustBootstrapLRT(data, modelName = "VEI")
+# summary(LRT)
+# plot(LRT)
+```
+
+
+```{r}
+cluster_results <- wide_cost_p %>%
+  st_drop_geometry() %>% 
+  as_tibble() %>% 
+  mutate(cluster = factor(mod1$classification)) 
+
+aggregate(data = cluster_results, german_shepherd ~ cluster, mean)
+aggregate(data = cluster_results, french_bulldog ~ cluster, mean) 
+# aggregate(data = cluster_results, maltese ~ cluster, mean)
+# aggregate(data = cluster_results, rottweiler ~ cluster, mean)
+```
+
+```{r echo=FALSE}
+cluster_results_map <- 
+  left_join(SSC, 
+            cluster_results %>% 
+              select(SSC_CODE16, cluster))
+
+tm_shape(cluster_results_map) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "cluster",
+             # palette = "BrBG",
+             border.col = NA)
 ```
 
 <!-- ----------------------------------------------------- -->
