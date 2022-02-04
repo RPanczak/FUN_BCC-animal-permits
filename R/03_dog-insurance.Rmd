@@ -1,0 +1,671 @@
+---
+title: "Dog-SEP"
+subtitle: "Dog insurance"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: no
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    self_contained: true
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+---
+
+<!-- ------------------------------------------------------------ --> 
+
+```{r r-setup, include=FALSE}
+set.seed(12345)
+options(scipen = 999)
+options(max.print = "75")
+
+library(pacman)
+p_load(tidyverse, magrittr, scales, stringr,
+       sjmisc, sjPlot, DT,
+       sf, tmap,
+       correlation, see, modelbased, parameters)
+
+tmap_mode("view")
+```
+
+```{r knit-setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width=8, fig.height=6, dpi=300, 
+                      out.width="800px", out.height="600px")
+
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+
+knitr::opts_knit$set(width = 75)
+
+mu <- Hmisc::markupSpecs$html
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Data 
+
+Preparations in file `00.Rmd`
+
+```{r}
+dog_ownership_cost <- read_rds("data/dog_ownership_cost.Rds") %>% 
+  select(-expensive) %>% 
+  # mutate(expensive = ifelse(cost_compared_to_other_breeds == "Below average", 0, 1)) %>%
+  mutate(expensive = ifelse(cost_compared_to_other_breeds == "Significantly above average", 1, 0)) %>%
+  select(-cost_compared_to_other_breeds)
+
+length(unique(dog_ownership_cost$SSC_NAME16))
+length(unique(dog_ownership_cost$dog_breed))
+
+SSC <- read_rds("data/geo/SSC.Rds")
+
+length(unique(SSC$SSC_NAME16))
+
+wide_insurance_n <- read_rds("data/wide_insurance_n.Rds")
+wide_insurance_p <- read_rds("data/wide_insurance_p.Rds")
+```
+
+Important to remember, we have small amount of missings here!  
+
+```{r echo=FALSE}
+dog_ownership_cost %>% 
+  frq(is.na(expensive))
+```
+
+Breeds:  
+
+```{r echo=FALSE}
+dog_ownership_cost %>% 
+  filter(is.na(expensive)) %>% 
+  frq(dog_breed, sort.frq = "desc")
+```
+
+## All Brisbane dogs combined 
+
+```{r echo=FALSE, fig.width=12, fig.height=8}
+my_colors <- RColorBrewer::brewer.pal(3, "BrBG")[c(1,3)]
+
+dog_ownership_cost %>% 
+  mutate(expensive = factor(expensive, levels = c(0, 1),
+                            labels= c("No", "Yes"))) %>% 
+  mutate(dog_breed = fct_lump(dog_breed, n = 50)) %>%
+  group_by(dog_breed) %>% 
+  mutate(total = n()) %>% 
+  group_by(dog_breed, expensive) %>% 
+  summarise(count = n(),
+            total = first(total)) %>% 
+  ggplot(aes(x = reorder(dog_breed, total) , 
+             y = count,
+             fill = expensive)) + 
+  geom_col() +
+  coord_flip() +
+  ylab("Number of dogs") + xlab("") + 
+  scale_fill_manual(values = my_colors) +
+  theme_modern() +
+  theme(panel.grid.major.x = element_line(colour = "grey80"),
+        axis.text.y = element_text(size = 8))
+```
+
+## Dog counts
+
+Summarizing all dogs, and expensive only.  
+
+```{r}
+dog_ownership_agg <- dog_ownership_cost %>% 
+  group_by(SSC_NAME16) %>% 
+  summarise(dogs_exp = sum(expensive, na.rm = TRUE))
+
+SSC %<>% 
+  left_join(dog_ownership_agg) %>%
+  mutate(dogs_exp_prop = dogs_exp / dogs_total) %>% 
+  relocate(geometry, .after = last_col())
+```
+
+## Proportion of expensive dogs
+
+```{r echo=FALSE}
+summary(SSC$dogs_exp_prop)
+```
+
+### Ranking
+
+```{r echo=FALSE}
+SSC %>% 
+  st_drop_geometry() %>% 
+  arrange(desc(dogs_exp_prop)) %>% 
+  select(SSC_NAME16, URP, dogs_total, dogs_exp, dogs_exp_prop) %>% 
+  mutate(dogs_exp_prop = number(dogs_exp_prop, accuracy = 0.01)) %>% 
+  # slice(1:10) %>% 
+  datatable()
+```
+
+### Map
+
+```{r echo=FALSE}
+tm_shape(SSC) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "dogs_exp_prop",
+             style = "quantile",
+             palette = "BrBG",
+             border.col = NA)
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Association with SEIFA
+
+## Functions
+
+```{r}
+seifa_means <- function (seifa_index) {
+  
+  myenc <- enquo(seifa_index)
+  
+  SSC %>% 
+    st_drop_geometry() %>% 
+    group_by(!!myenc) %>% 
+    summarize(mean = mean(dogs_exp_prop, na.rm = TRUE),
+              sd = sd(dogs_exp_prop, na.rm = TRUE),
+              p25 = quantile(dogs_exp_prop, c(0.25), na.rm = TRUE),
+              p50 = quantile(dogs_exp_prop, c(0.50), na.rm = TRUE),
+              p75 = quantile(dogs_exp_prop, c(0.75), na.rm = TRUE)) %>% 
+    ungroup()
+}
+
+seifa_cor <- function (seifa_index) {
+  
+  myenc <- enquo(seifa_index)
+  
+  SSC %>%
+    st_drop_geometry() %>%
+    select(!!myenc, dogs_exp_prop) %>%
+    mutate_if(is.factor, as.numeric) %>%
+    correlation(method = "kendall")
+  
+}
+
+seifa_plot <- function (seifa_index) {
+  
+  model <- eval(substitute(lm(dogs_exp_prop ~ seifa_index, 
+                              data = SSC, na.action = na.omit)))
+  means <- estimate_means(model)
+  
+  myenc <- enquo(seifa_index)
+  
+  ggplot(SSC,
+         aes(x = !!myenc,
+             y = dogs_exp_prop,
+             fill = !!myenc)) +
+    geom_violin(alpha = 0.66) +
+    geom_jitter2(width = 0.05, alpha = 0.5) +
+    geom_line(data = means, aes(y = Mean, group = 1), size = 1) +
+    geom_pointrange(data = means,
+                    aes(y = Mean, ymin = CI_low, ymax = CI_high),
+                    size = 1,
+                    color = "white") + 
+    scale_fill_brewer(palette = "BrBG") +
+    ylab("Proportion of expensive dogs") +
+    theme_modern()
+  
+}
+```
+
+## IRSD {.tabset}
+
+### Recalculated 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IRSD_d)
+seifa_cor(IRSD_d)
+seifa_plot(IRSD_d)
+```
+
+### Original 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IRSD_d_orig)
+seifa_cor(IRSD_d_orig)
+seifa_plot(IRSD_d_orig)
+```
+
+## IRSAD {.tabset}
+
+### Recalculated 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IRSAD_d)
+seifa_cor(IRSAD_d)
+seifa_plot(IRSAD_d)
+```
+
+### Original 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IRSAD_d_orig)
+seifa_cor(IRSAD_d_orig)
+seifa_plot(IRSAD_d_orig)
+```
+
+## IER {.tabset}
+
+### Recalculated 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IER_d)
+seifa_cor(IER_d)
+seifa_plot(IER_d)
+```
+
+### Original 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IER_d_orig)
+seifa_cor(IER_d_orig)
+seifa_plot(IER_d_orig)
+```
+
+## IEO {.tabset}
+
+### Recalculated 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IEO_d)
+seifa_cor(IEO_d)
+seifa_plot(IEO_d)
+```
+
+### Original 
+
+```{r message=FALSE, warning=FALSE}
+seifa_means(IEO_d_orig)
+seifa_cor(IEO_d_orig)
+seifa_plot(IEO_d_orig)
+```
+
+<!-- ----------------------------------------------------- -->
+
+# PCA
+
+<!-- https://stats.stackexchange.com/questions/53/pca-on-correlation-or-covariance -->
+
+```{r}
+data <- 
+  # wide_insurance_n %>%
+  wide_insurance_p %>%
+  st_drop_geometry() %>% 
+  select(alaskan_malamute:last_col()) %>% 
+  as_tibble()
+
+# View(cov(data))
+```
+
+```{r}
+pca <- principal_components(data, 
+                            standardize = FALSE,
+                            n = 1)
+pca
+
+summary(pca)
+
+plot(pca)
+
+pca_results <- wide_insurance_p %>%
+  st_drop_geometry() %>% 
+  as_tibble() %>% 
+  select(SSC_CODE16:caution) %>% 
+  mutate(pca_raw = predict(pca)$Component_1, 
+         pca = ntile(pca_raw, 10)) 
+```
+
+## `IRSD_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IRSD, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IRSD_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IRSD_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IRSD_d, pca_results$pca)
+
+assocplot(tabz,
+          xlab = "IRSD_d", ylab = "pca")
+
+mosaicplot(tabz,
+           xlab = "IRSD_d", ylab = "pca")
+```
+
+## `IRSAD_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IRSAD, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IRSAD_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IRSAD_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IRSAD_d, pca_results$IRSAD_d_orig)
+
+assocplot(tabz,
+          xlab = "IRSAD_d", ylab = "pca")
+
+mosaicplot(tabz,
+           xlab = "IRSAD_d", ylab = "pca")
+```
+
+## `IER_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IER, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IER_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IER_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IER_d, pca_results$pca)
+
+assocplot(tabz,
+          xlab = "IER_d", ylab = "pca")
+
+mosaicplot(tabz,
+           xlab = "IER_d", ylab = "pca")
+```
+
+## `IEO_d` 
+
+```{r}
+ggplot(pca_results, aes(x = IEO, y = pca_raw)) + 
+  geom_point()
+```
+
+```{r echo=FALSE}
+pca_results %>% 
+  frq(pca == IEO_d)
+```
+
+```{r echo=FALSE}
+plot_xtab(pca_results$IEO_d, pca_results$pca, 
+          margin = "row", bar.pos = "stack",
+          show.summary = TRUE, coord.flip = TRUE)
+
+tabz <- table(pca_results$IEO_d, pca_results$pca)
+
+assocplot(tabz,
+          xlab = "IEO_d", ylab = "IEO_d_orig")
+
+mosaicplot(tabz,
+           xlab = "IEO_d", ylab = "IEO_d_orig")
+```
+
+<!-- ----------------------------------------------------- -->
+
+# Clustering I
+
+```{r}
+data <- 
+  wide_insurance_p %>%
+  st_drop_geometry() %>% 
+  select(alaskan_malamute:last_col()) %>% 
+  as_tibble()
+```
+
+## No of clusters
+
+```{r}
+n <- n_clusters(data, package = c("easystats", "NbClust", "mclust"))
+n
+plot(n)
+```
+
+## K-Means
+
+```{r}
+rez_kmeans <- cluster_analysis(data, n = 2, method = "kmeans")
+
+rez_kmeans
+
+plot(rez_kmeans)
+
+plot(summary(rez_kmeans))
+```
+
+```{r}
+cluster_results <- wide_insurance_p %>%
+  st_drop_geometry() %>% 
+  as_tibble() %>% 
+  mutate(cluster = predict(rez_kmeans)) 
+
+frq(cluster_results, cluster)
+
+aggregate(data = cluster_results, french_bulldog ~ cluster, mean)
+aggregate(data = cluster_results, rottweiler ~ cluster, mean)
+```
+
+```{r echo=FALSE}
+cluster_results_map <- 
+  left_join(SSC, 
+            cluster_results %>% 
+              select(SSC_CODE16, cluster) %>% 
+              mutate(cluster = factor(cluster)))
+
+tm_shape(cluster_results_map) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "cluster",
+             # palette = "BrBG",
+             border.col = NA)
+```
+
+## Hierarchical Clustering
+
+```{r}
+rez_hclust <- cluster_analysis(data, n = 2, method = "hclust")
+
+rez_hclust
+
+plot(rez_hclust)
+```
+
+## Hierarchical K-Means
+
+```{r}
+rez_hkmeans <- cluster_analysis(data, n = 2, method = "hkmeans")
+
+rez_hkmeans
+
+plot(rez_hkmeans)
+```
+
+## K-Medoids (PAM)
+
+```{r}
+rez_pam <- cluster_analysis(data, n = 2, method = "pam")
+
+rez_pam
+
+plot(rez_pam)
+```
+
+## Bootstrapped Hierarchical Clustering
+
+```{r eval=FALSE, include=FALSE}
+rez_hclust2 <- cluster_analysis(data, 
+                                n = NULL, 
+                                method = "hclust", 
+                                iterations = 500,
+                                ci = 0.90)
+
+rez_hclust2
+
+plot(rez_hclust2)
+```
+
+## DBSCAN
+
+```{r}
+eps <- n_clusters_dbscan(data, min_size = 0.01) 
+
+eps
+
+plot(eps)
+
+rez_dbscan <- cluster_analysis(data, method = "dbscan", dbscan_eps = 4.5)
+
+rez_dbscan
+
+plot(rez_dbscan)
+```
+
+## Hierarchical K-Means
+
+```{r}
+rez_hdbscan <- cluster_analysis(data, method = "hdbscan")
+
+rez_hdbscan
+
+# plot(rez_hdbscan)
+```
+
+## K-Medoids with estimation of number of clusters (pamk)
+
+```{r}
+rez_pamk <- cluster_analysis(data, method = "pamk")
+
+rez_pamk 
+
+plot(rez_pamk)
+```
+
+## Mixture
+
+```{r}
+p_load(mclust)
+
+rez_mixture <- cluster_analysis(data, method = "mixture")
+
+rez_mixture
+
+plot(rez_mixture)
+```
+
+## Metaclustering
+
+```{r}
+list_of_results <- list(rez_kmeans, rez_hclust, rez_hkmeans, rez_pam,
+                        # rez_hclust2, 
+                        rez_dbscan, rez_hdbscan, rez_mixture)
+
+probability_matrix <- cluster_meta(list_of_results)
+
+heatmap(probability_matrix, scale = "none", 
+        col = grDevices::hcl.colors(256, palette = "inferno"))
+```
+
+<!-- ----------------------------------------------------- -->
+
+# Clustering II
+
+```{r}
+data <- 
+  wide_insurance_p %>%
+  st_drop_geometry() %>% 
+  select(alaskan_malamute:last_col()) %>% 
+  as_tibble()
+```
+
+```{r}
+p_load(mclust)
+
+BIC <- mclustBIC(data, G = seq(from = 2, to = 9))
+
+plot(BIC)
+
+# BIC
+summary(BIC)
+
+mod1 <- Mclust(data, x = BIC)
+mod1
+summary(mod1, parameters = TRUE)
+
+frq(mod1$classification)
+
+plot(mod1, what = "classification")
+
+# ICL <- mclustICL(data, G = seq(from = 2, to = 9))
+# summary(ICL)
+# plot(ICL)
+
+# LRT <- mclustBootstrapLRT(data, modelName = "VEI")
+# summary(LRT)
+# plot(LRT)
+```
+
+
+```{r}
+cluster_results <- wide_insurance_p %>%
+  st_drop_geometry() %>% 
+  as_tibble() %>% 
+  mutate(cluster = factor(mod1$classification)) 
+
+aggregate(data = cluster_results, french_bulldog ~ cluster, mean)
+aggregate(data = cluster_results, rottweiler ~ cluster, mean)
+```
+
+```{r echo=FALSE}
+cluster_results_map <- 
+  left_join(SSC, 
+            cluster_results %>% 
+              select(SSC_CODE16, cluster) %>% 
+              mutate(cluster = factor(cluster)))
+
+tm_shape(cluster_results_map) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "cluster",
+             # palette = "BrBG",
+             border.col = NA)
+```
+
+<!-- ----------------------------------------------------- -->
+
+# Computing Environment
+
+`r mu$session()`
