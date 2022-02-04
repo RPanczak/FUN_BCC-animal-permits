@@ -12,6 +12,7 @@ output:
     toc: yes
     toc_depth: 4
     toc_float: yes
+    self_contained: true
 editor_options: 
   chunk_output_type: console
 knit: (function(inputFile, encoding) {
@@ -314,7 +315,6 @@ data <-
 # View(cov(data))
 ```
 
-
 ```{r}
 pca <- principal_components(data, 
                             standardize = FALSE,
@@ -352,6 +352,98 @@ Investigate(res.pca,
 ff::file.move("docs/FactoInvestigate.Rmd", "../R")
 
 # resshiny <- PCAshiny(res.pca)
+```
+
+```{r eval=FALSE, include=FALSE}
+# https://bradleyboehmke.github.io/HOML/pca.html
+p_load(h2o) 
+
+h2o.no_progress()  # turn off progress bars for brevity
+h2o.init(max_mem_size = "5g")  # connect to H2O instance
+
+data.h2o <- as.h2o(data)
+
+# run PCA
+my_pca <- h2o.prcomp(
+  training_frame = data.h2o,
+  pca_method = "GramSVD",
+  k = ncol(data.h2o), 
+  transform = "NONE", 
+  impute_missing = FALSE,
+  max_runtime_secs = 1000
+)
+
+my_pca@model$eigenvectors %>% 
+  as.data.frame() %>% 
+  mutate(feature = row.names(.)) %>%
+  ggplot(aes(pc1, reorder(feature, pc1))) +
+  geom_point()
+
+my_pca@model$eigenvectors %>% 
+  as.data.frame() %>% 
+  mutate(feature = row.names(.)) %>%
+  ggplot(aes(pc1, pc2, label = feature)) +
+  geom_text()
+
+eigen <- my_pca@model$importance["Standard deviation", ] %>%
+  as.vector() %>%
+  .^2
+
+sum(eigen)
+
+which(eigen >= 1)
+
+data.frame(
+  PC  = my_pca@model$importance %>% seq_along(),
+  PVE = my_pca@model$importance %>% .[2,] %>% unlist(),
+  CVE = my_pca@model$importance %>% .[3,] %>% unlist()
+) %>%
+  tidyr::gather(metric, variance_explained, -PC) %>%
+  ggplot(aes(PC, variance_explained)) +
+  geom_point() +
+  facet_wrap(~ metric, ncol = 1, scales = "free")
+
+data.frame(
+  PC  = my_pca@model$importance %>% seq_along,
+  PVE = my_pca@model$importance %>% .[2,] %>% unlist()
+) %>%
+  ggplot(aes(PC, PVE, group = 1, label = PC)) +
+  geom_point() +
+  geom_line() +
+  geom_text(nudge_y = -.002)
+
+```
+
+```{r eval=FALSE, include=FALSE}
+p_load(sparsepca) 
+
+spca <- spca(data, k = 2, 
+             alpha = 1e-4, beta = 1e-4, 
+             center = TRUE, scale = FALSE,  
+             max_iter = 1000, tol = 1e-4, verbose = TRUE)
+
+spca$loadings
+spca$scores[,1]
+spca$eigenvalues
+
+ 
+pca_results <- wide_cost_p %>%
+  st_drop_geometry() %>% 
+  as_tibble() %>% 
+  select(SSC_CODE16:caution) %>% 
+  mutate(pca_raw = spca$scores[,1], 
+         pca = ntile(pca_raw, 10)) 
+
+rspca <- rspca(data, k = 2, 
+               alpha = 1e-4, beta = 1e-4, 
+               center = TRUE, scale = FALSE,  
+               max_iter = 1000, tol = 1e-4, verbose = TRUE)
+
+robspca <- robspca(data, k = 2, 
+                   alpha = 1e-4, beta = 1e-4, 
+                   center = TRUE, scale = FALSE,  
+                   max_iter = 1000, tol = 1e-4, verbose = TRUE)
+
 ```
 
 ## `IRSD_d` 
