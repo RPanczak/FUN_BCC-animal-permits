@@ -664,6 +664,17 @@ tm_shape(cluster_results_map) +
              border.col = NA)
 ```
 
+```{r}
+cluster_results %>% 
+  select(cluster, alaskan_malamute:welsh_corgi_cardigan) %>% 
+  pivot_longer(alaskan_malamute:welsh_corgi_cardigan) %>% 
+  group_by(cluster, name) %>% 
+  summarise(value = mean(value)) %>% 
+  ungroup() %>% 
+  ggplot(aes(value, reorder(name, value))) +
+  geom_point(aes(color = cluster)) 
+```
+
 <!-- ----------------------------------------------------- -->
 
 # Computing Environment

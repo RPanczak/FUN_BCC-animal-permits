@@ -778,6 +778,17 @@ tm_shape(cluster_results_map) +
              border.col = NA)
 ```
 
+```{r}
+cluster_results %>% 
+  select(cluster, akita:black_russian_terrier) %>% 
+  pivot_longer(akita:black_russian_terrier) %>% 
+  group_by(cluster, name) %>% 
+  summarise(value = mean(value)) %>% 
+  ungroup() %>% 
+  ggplot(aes(value, reorder(name, value))) +
+  geom_point(aes(color = cluster)) 
+```
+
 <!-- ----------------------------------------------------- -->
 
 # Computing Environment
