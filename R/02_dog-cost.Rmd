@@ -80,9 +80,7 @@ wide_cost_n <- read_rds("data/wide_cost_n.Rds")
 wide_cost_p <- read_rds("data/wide_cost_p.Rds")
 ```
 
-<!-- ------------------------------------------------------------ --> 
-
-# All Brisbane dogs combined 
+## All Brisbane dogs combined 
 
 ```{r echo=FALSE, fig.width=12, fig.height=8}
 my_colors <- RColorBrewer::brewer.pal(3, "BrBG")[c(1,3)]
@@ -108,77 +106,20 @@ dog_ownership_cost %>%
         axis.text.y = element_text(size = 8))
 ```
 
-## Dogs per capita
+## Dog counts
 
 Summarizing all dogs, and expensive only.  
+Excluding areas with no dogs.  
 
 ```{r}
 dog_ownership_agg <- dog_ownership_cost %>% 
   group_by(SSC_NAME16) %>% 
-  summarise(dogs_total = n(),
-            dogs_exp = sum(expensive))
+  summarise(dogs_exp = sum(expensive))
 
-SSC %<>% 
-  left_join(dog_ownership_agg)
-```
-
-### Missing SEIFA 
-
-Areas with no URP/SEIFA but having (small amount of) dogs:
-
-```{r echo=FALSE}
-SSC %>% 
-  st_drop_geometry() %>% 
-  right_join(dog_ownership_agg) %>% 
-  filter(is.na(SSC_CODE16)) %>% 
-  select(SSC_NAME16, dogs_total)
-```
-
-Since these areas have no SEIFA they will be excluded.  
-
-### Missing dogs 
-
-Area with low URP and no dogs at all:
-
-```{r echo=FALSE}
-SSC %>% 
-  st_drop_geometry() %>% 
-  left_join(dog_ownership_agg) %>% 
-  filter(is.na(dogs_total)) %>% 
-  select(SSC_NAME16, dogs_total, URP)
-```
-
-`NA` was assumed to mean 0 here.  
-
-```{r include=FALSE}
 SSC %<>% 
   left_join(dog_ownership_agg) %>%
-  mutate(dogs_total = ifelse(is.na(dogs_total), 0, dogs_total)) %>%
-  mutate(dogs_percap = (dogs_total / URP)*1000,
-         dogs_exp_prop = dogs_exp / dogs_total) %>% 
+  mutate(dogs_exp_prop = dogs_exp / dogs_total) %>% 
   relocate(geometry, .after = last_col())
-```
-
-### Ranking
-
-```{r echo=FALSE}
-SSC %>% 
-  st_drop_geometry() %>% 
-  arrange(desc(dogs_percap)) %>% 
-  select(SSC_NAME16, dogs_total, URP, dogs_percap) %>% 
-  # slice(1:10) %>% 
-  datatable()
-```
-
-### Map
-
-```{r echo=FALSE}
-tm_shape(SSC) +
-  tm_bubbles(id = "SSC_NAME16", 
-             size = "dogs_total", 
-             col = "dogs_percap",
-             palette = "BrBG",
-             border.col = NA)
 ```
 
 ## Proportion of expensive dogs
@@ -194,6 +135,7 @@ SSC %>%
   st_drop_geometry() %>% 
   arrange(desc(dogs_exp_prop)) %>% 
   select(SSC_NAME16, dogs_total, URP, dogs_exp_prop) %>% 
+  mutate(dogs_exp_prop = number(dogs_exp_prop, accuracy = 0.01)) %>% 
   # slice(1:10) %>% 
   datatable()
 ```
@@ -218,6 +160,7 @@ tm_shape(SSC) +
   tm_bubbles(id = "SSC_NAME16", 
              size = "dogs_total", 
              col = "dogs_exp_prop",
+             style = "quantile",
              palette = "BrBG",
              border.col = NA)
 ```
@@ -653,7 +596,6 @@ rez_pamk
 plot(rez_pamk)
 ```
 
-
 ## Mixture
 
 ```{r}
@@ -708,9 +650,9 @@ frq(mod1$classification)
 
 plot(mod1, what = "classification")
 
-ICL <- mclustICL(data, G = seq(from = 2, to = 9))
-summary(ICL)
-plot(ICL)
+# ICL <- mclustICL(data, G = seq(from = 2, to = 9))
+# summary(ICL)
+# plot(ICL)
 
 # LRT <- mclustBootstrapLRT(data, modelName = "VEI")
 # summary(LRT)

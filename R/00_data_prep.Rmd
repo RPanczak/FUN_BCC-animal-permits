@@ -225,6 +225,10 @@ LB %>%
 unlink("data-raw/geo/QSC_Extracted_Data_20190816_111155192000-13108", recursive = TRUE)
 ```
 
+```{r include=FALSE}
+rm(SUB)
+```
+
 <!-- ------------------------------------------------------------ --> 
 
 # SEIFA
@@ -279,7 +283,7 @@ SSC %<>%
 
 Comparing Australia & Brisbane, example of IRSD.
 
-### Frequencies {.tabset}
+### Frequencies table {.tabset}
 
 #### Australia 
 
@@ -293,7 +297,7 @@ frq(SEIFA$IRSD_d)
 frq(SSC$IRSD_d)
 ```
 
-### Frequencies {.tabset}
+### Frequencies plot {.tabset}
 
 #### Australia 
 
@@ -317,7 +321,7 @@ SSC %>%
   ylab("% of areas")
 ```
 
-### Frequencies {.tabset}
+### Range per decile {.tabset}
 
 #### Australia 
 
@@ -406,8 +410,6 @@ SSC %<>%
   relocate(IRSAD_d_orig, .after = IRSAD_d) %>% 
   relocate(IER_d_orig, .after = IER_d) %>% 
   relocate(IEO_d_orig, .after = IEO_d) 
-
-write_rds(SSC, "data/geo/SSC.Rds")
 ```
 
 Note: Deciles are represented as `factor` variable. Certain application could benefit from changing it to `ordered`?  
@@ -546,6 +548,10 @@ tm_shape(SSC) +
               popup.vars = c("SSC_NAME16", "IEO_d", "IEO"))
 ```
 
+```{r include=FALSE}
+rm(SEIFA)
+```
+
 <!-- ------------------------------------------------------------ --> 
 
 # Dog cost 
@@ -642,7 +648,8 @@ dog_insurance <- read_rds("data-raw/costs/dog_insurance.Rds") %>%
            as.numeric(gsub("$", "",
                            average_comprehensive_policy_cost_annual, 
                            fixed = TRUE))
-  )
+  ) %>% 
+  filter(dog_breed != "Unknown Dog Breed")
 ```
 
 ```{r include=FALSE}
@@ -761,7 +768,8 @@ dog_ownership_cost <- left_join(dog_ownership, dog_cost, by = "dog_breed") %>%
     expensive = case_when(
       is.na(expensive) ~ 0,
       expensive == "yes" ~ 1
-    )
+    ),
+    expensive = as.integer(expensive)
   )
 ```
 
@@ -885,7 +893,96 @@ Two largest groups:
 These observations will remain as `NA`s.  
 
 ```{r include=FALSE}
+rm(dog_ownership, dog_cost, dog_insurance)
+```
+
+<!-- ----------------------------------------------------- -->
+
+# Dogs per capita
+
+Summarizing all dogs, and expensive only.  
+
+```{r}
+dog_agg <- dog_ownership_cost %>% 
+  group_by(SSC_NAME16) %>% 
+  summarise(dogs_total = n())
+
+SSC %<>% 
+  left_join(dog_agg)
+```
+
+## Missing SEIFA 
+
+Areas with no URP/SEIFA but having (small amount of) dogs:
+
+```{r echo=FALSE}
+temp1 <- SSC %>% 
+  st_drop_geometry() %>% 
+  right_join(dog_agg) %>% 
+  filter(is.na(SSC_CODE16)) %>% 
+  select(SSC_NAME16, dogs_total)
+
+temp1
+
+dog_ownership_cost %<>% 
+  filter(!SSC_NAME16 %in% temp1$SSC_NAME16)
+```
+
+These areas were excluded from the `dog_ownership_cost` dataset.  
+
+## Missing dogs 
+
+Area with low URP (also marked as caution == TRUE in SEIFA) and no dogs at all:
+
+```{r echo=FALSE}
+temp2 <- SSC %>% 
+  st_drop_geometry() %>% 
+  left_join(dog_agg) %>% 
+  filter(is.na(dogs_total)) %>% 
+  select(SSC_NAME16, dogs_total, URP)
+
+temp2
+
+SSC %<>% 
+  filter(!SSC_NAME16 %in% temp2$SSC_NAME16)
+```
+
+```{r}
+SSC %<>% 
+  filter(dogs_total > 0) %>% 
+  mutate(dogs_percap = (dogs_total / URP)*100) %>% 
+  relocate(geometry, .after = last_col())
+```
+
+This area was excluded.  
+
+## Ranking
+
+```{r echo=FALSE}
+SSC %>% 
+  st_drop_geometry() %>% 
+  arrange(desc(dogs_percap)) %>% 
+  select(SSC_NAME16, dogs_total, URP, dogs_percap) %>% 
+  mutate(dogs_percap = number(dogs_percap, accuracy = 0.1)) %>% 
+  # slice(1:10) %>% 
+  datatable()
+```
+
+## Map
+
+```{r echo=FALSE}
+tm_shape(SSC) +
+  tm_bubbles(id = "SSC_NAME16", 
+             size = "dogs_total", 
+             col = "dogs_percap",
+             style = "quantile",
+             palette = "BrBG",
+             border.col = NA)
+```
+
+```{r include=FALSE}
 write_rds(dog_ownership_cost, "data/dog_ownership_cost.Rds")
+write_rds(SSC, "data/geo/SSC.Rds")
 ```
 
 <!-- ----------------------------------------------------- -->
@@ -964,7 +1061,8 @@ wide_cost_p <- right_join(SSC, wide_cost_p)
 
 ```{r}
 wide_insurance_n <- dog_ownership_cost %>% 
-  filter(cost_compared_to_other_breeds != "Below average") %>% 
+  # filter(cost_compared_to_other_breeds != "Below average") %>% 
+  filter(cost_compared_to_other_breeds == "Significantly above average") %>% 
   group_by(SSC_NAME16, dog_breed) %>% 
   summarise(n = n()) %>% 
   ungroup() %>% 
@@ -977,7 +1075,8 @@ wide_insurance_n <- dog_ownership_cost %>%
 wide_insurance_n <- right_join(SSC, wide_insurance_n)
 
 wide_insurance_p <- dog_ownership_cost %>% 
-  filter(cost_compared_to_other_breeds != "Below average") %>% 
+  # filter(cost_compared_to_other_breeds != "Below average") %>% 
+  filter(cost_compared_to_other_breeds == "Significantly above average") %>% 
   group_by(SSC_NAME16, dog_breed) %>% 
   summarise(n = n()) %>% 
   ungroup() %>% 
