@@ -1,6 +1,7 @@
 ---
 title: "Dog-SEP"
 subtitle: "Dog insurance"
+pagetitle: "Dog-SEP: insurance"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 

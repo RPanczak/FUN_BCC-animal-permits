@@ -1,6 +1,7 @@
 ---
 title: "Dog-SEP"
 subtitle: "Data preps"
+pagetitle: "Dog-SEP: preps"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
