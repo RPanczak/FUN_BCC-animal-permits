@@ -75,9 +75,7 @@ wide_all_n <- read_rds("data/wide_all_n.Rds") %>%
   sf::st_drop_geometry() %>% 
   # as_tibble() %>% 
   select(IEO, IEO_d, 
-         akita:last_col()) %>% 
-  rename(outcome = IEO,
-         outcome_d = IEO_d)
+         akita:last_col())
 
 wide_all_p <- read_rds("data/wide_all_p.Rds") %>% 
   sf::st_drop_geometry() %>% 
@@ -111,6 +109,12 @@ nzv <- nearZeroVar(wide_all_p)
 wide_all_p <- wide_all_p[, -nzv]
 wide_all_n <- wide_all_n[, -nzv]
 rm(nzv)
+```
+
+```{r}
+wide_all_n %<>% 
+  mutate(weight = rowSums(across(where(is.numeric)))) %>% 
+  select(weight)
 ```
 
 ### Correlated breeds
@@ -149,8 +153,8 @@ inTrain <- createDataPartition(
   list = FALSE
 )
 
-training <- wide_all_p[ inTrain,]
-testing  <- wide_all_p[-inTrain,]
+training <- wide_all_p[ inTrain, ]
+testing  <- wide_all_p[-inTrain, ]
 
 training_weights <- wide_all_n[ inTrain,]
 ```
@@ -172,8 +176,6 @@ frq(testing, outcome_d)
 ```{r include=FALSE}
 training <- select(training, -outcome_d)
 testing <- select(testing, -outcome_d)
-
-training_weights <- select(training_weights, -outcome_d, -outcome)
 ```
 
 Outcome distro checks  
@@ -193,7 +195,7 @@ ggplot() +
 ```{r}
 set.seed(12345)
 m_rpart <- rpart(outcome ~ ., data = training)
-m_rpart <- rpart(outcome ~ ., data = training, weights = training_weights)
+# m_rpart <- rpart(outcome ~ ., data = training, weights = training_weights)
 ```
 
 ```{r echo=FALSE}
@@ -265,6 +267,7 @@ m_rpart_tu <- train(outcome ~ .,
                     method = "rpart",
                     # method = "rpart2", # uses max tree depth
                     data = training,
+                    # weights = training_weights, 
                     metric = "RMSE",
                     # metric = "Rsquared",
                     tuneLength = 50)
