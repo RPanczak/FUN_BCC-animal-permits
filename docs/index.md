@@ -1,5 +1,6 @@
 ---
 layout: default
+pagetitle: "Dog-SEP"
 ---
 
 ## Data sources
