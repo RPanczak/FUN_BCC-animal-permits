@@ -1,0 +1,293 @@
+---
+title: "Dog-SEP"
+subtitle: "Machine learning: regression trees"
+pagetitle: "Dog-SEP: SVM"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: no
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    self_contained: true
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+---
+
+<!-- ------------------------------------------------------------ --> 
+
+```{r r-setup, include=FALSE}
+set.seed(12345)
+options(scipen = 999)
+options(max.print = "75")
+
+library(pacman)
+p_load(tidyverse, magrittr, DT,
+       caret, e1071, kernlab)
+
+import::from("sjmisc", "frq")
+```
+
+```{r knit-setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width=8, fig.height=6, dpi=300, 
+                      out.width="800px", out.height="600px")
+
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+
+knitr::opts_knit$set(width = 75)
+
+mu <- Hmisc::markupSpecs$html
+```
+
+```{r include=FALSE}
+# function to calculate the mean absolute error
+MAE <- function(actual, predicted) {
+  mean(abs(actual - predicted))  
+}
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Background 
+
+Using info from chapter 7 of *Machine Learning with R* [book](https://www.packtpub.com/product/machine-learning-with-r-third-edition/9781788295864), `caret` package [manual](https://topepo.github.io/caret/index.html), and `e1071` package [vignette](https://cran.r-project.org/web/packages/e1071/).  
+
+<!-- ------------------------------------------------------------ --> 
+
+# Data 
+
+## Prepared data
+
+Preparations in file `00.Rmd`.  
+
+Using the Index of Education and Occupation (`IEO`) as outcome. More info about the index [from ABS](https://www.abs.gov.au/ausstats/abs@.nsf/Lookup/by%20Subject/2033.0.55.001~2016~Main%20Features~IEO~22).  
+
+```{r}
+# wide_all_n <- read_rds("data/wide_all_n.Rds") %>% 
+#   sf::st_drop_geometry() %>% 
+#   # as_tibble() %>% 
+#   select(IEO, IEO_d, 
+#          akita:last_col())
+
+wide_all_p <- read_rds("data/wide_all_p.Rds") %>% 
+  sf::st_drop_geometry() %>% 
+  # as_tibble() %>% 
+  select(IEO, IEO_d, 
+         akita:last_col()) %>% 
+  rename(outcome = IEO,
+         outcome_d = IEO_d)
+
+# tail(names(wide_all_p), n = 1)
+# skimr::skim(wide_all_p)
+# report::report(wide_all_p)
+```
+
+## Near zero-variance 
+
+```{r}
+nzv <- nearZeroVar(wide_all_p, saveMetrics = TRUE)
+```
+
+```{r echo=FALSE}
+nzv %>% 
+  filter(nzv == TRUE) %>% 
+  datatable()
+```
+
+```{r}
+nzv <- nearZeroVar(wide_all_p)
+wide_all_p <- wide_all_p[, -nzv]
+# wide_all_n <- wide_all_n[, -nzv]
+rm(nzv)
+```
+
+```{r eval=FALSE, include=FALSE}
+# wide_all_n %<>% 
+#   mutate(weight = rowSums(across(where(is.numeric)))) %>% 
+#   select(weight)
+```
+
+## Train split
+
+75/25 split, taking into account distribution of deciles:    
+
+```{r}
+inTrain <- createDataPartition(
+  y = wide_all_p$outcome_d,
+  p = .75,
+  list = FALSE
+)
+
+training <- wide_all_p[ inTrain, ]
+testing  <- wide_all_p[-inTrain, ]
+
+# training_weights <- wide_all_n[ inTrain,]
+```
+
+Training data:  
+
+```{r echo=FALSE}
+# nrow(training)
+frq(training, outcome_d)
+```
+
+Testing data:  
+
+```{r echo=FALSE}
+# nrow(testing)
+frq(testing, outcome_d)
+```
+
+```{r include=FALSE}
+training <- select(training, -outcome_d)
+testing <- select(testing, -outcome_d)
+```
+
+Outcome distro checks  
+
+```{r echo=FALSE}
+ggplot() +
+  geom_density(data = training, aes(x = outcome), col = "forestgreen") +
+  geom_density(data = testing, aes(x = outcome), col = "firebrick") 
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Analysis with `e1071`
+
+## Training 
+
+```{r}
+set.seed(12345)
+m_svm <- svm(outcome ~ ., data = training,
+             type = "eps-regression",
+             kernel = "radial")
+```
+
+```{r echo=FALSE}
+summary(m_svm)
+```
+
+## Prediction
+
+```{r}
+p_svm <- predict(m_svm, testing)
+```
+
+Correlation:  
+
+```{r}
+cor(p_svm, testing$outcome)
+```
+
+MAE between predicted and actual values:  
+
+```{r}
+MAE(p_svm, testing$outcome)
+```
+
+```{r eval=FALSE, include=FALSE}
+# mean absolute error between actual values and mean value
+# mean(training$outcome) 
+MAE(mean(training$outcome), testing$outcome)
+```
+
+Distro of predicted (red) nd actual (green): 
+
+```{r echo=FALSE}
+# summary(p_svm)
+# summary(testing$outcome)
+
+ggplot() +
+  geom_density(data = as.data.frame(p_svm), aes(x = p_svm), col = "firebrick") +
+  geom_density(data = testing, aes(x = outcome), col = "forestgreen") 
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Analysis with `kernlab`
+
+## Tuning
+
+```{r}
+modelLookup("svmRadial")
+```
+
+Using grid of parameters to explore:  
+
+```{r}
+grid_tu <-  expand.grid(sigma = seq(0.00001, 0.0002, 0.00001),
+                        C = seq(10, 20, 1))
+
+nrow(grid_tu)
+```
+
+```{r}
+p_load(doParallel)
+
+cl <- makePSOCKcluster(parallel::detectCores())
+registerDoParallel(cl)
+
+set.seed(12345)
+m_svm_tu <- train(outcome ~ .,
+                    method = "svmRadial",
+                    data = training,
+                    # weights = training_weights, 
+                    metric = "RMSE",
+                    # metric = "Rsquared",
+                    tuneGrid = grid_tu)
+
+stopCluster(cl)
+p_unload(doParallel)
+```
+
+```{r echo=FALSE}
+# summary(m_svm_tu)
+ggplot(m_svm_tu)
+```
+
+```{r}
+m_svm_tu$finalModel
+```
+
+```{r}
+p_svm_tu <- predict(m_svm_tu, testing)
+```
+
+Correlation:  
+
+```{r}
+cor(p_svm_tu, testing$outcome)
+```
+
+MAE between predicted and actual values:  
+
+```{r}
+MAE(p_svm_tu, testing$outcome)
+```
+
+Distro of predicted (red) nd actual (green): 
+
+```{r echo=FALSE}
+# summary(p_svm)
+# summary(testing$outcome)
+
+ggplot() +
+  geom_density(data = as.data.frame(p_svm_tu), aes(x = p_svm_tu), col = "firebrick") +
+  geom_density(data = testing, aes(x = outcome), col = "forestgreen") 
+```
+

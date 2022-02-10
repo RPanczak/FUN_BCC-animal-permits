@@ -21,6 +21,7 @@ OSF project is [here](https://osf.io/c2gyw/).
  - [Dog costs analysis](02_dog-cost.html)  
  - [Dog insurance cost analysis](03_dog-insurance.html)  
  - [Machine learning 1 - regression trees on dog breeds](04_reg-tree.html)  
+ - [Machine learning 1 - SVN on dog breeds](05_svm.html)  
 
 ## Analyses of complaints & SEIFA
 
