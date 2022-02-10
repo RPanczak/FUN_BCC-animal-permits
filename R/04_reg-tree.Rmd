@@ -224,7 +224,7 @@ rattle::fancyRpartPlot(m_rpart)
 ## Prediction
 
 ```{r}
-p_rpart <- predict(m_rpart, testing)
+p_rpart <- predict(m_rpart, testing[-1])
 ```
 
 Correlation:  
@@ -312,7 +312,7 @@ rattle::fancyRpartPlot(m_rpart_tu$finalModel)
 ```
 
 ```{r}
-p_rpart_tu <- predict(m_rpart_tu, testing)
+p_rpart_tu <- predict(m_rpart_tu, testing[-1])
 ```
 
 Correlation:  
@@ -358,7 +358,7 @@ summary(m_cubist)
 
 ```{r}
 # generate predictions for the model
-p_cubist <- predict(m_cubist, testing)
+p_cubist <- predict(m_cubist, testing[-1])
 ```
 
 Correlation:  
@@ -434,7 +434,7 @@ m_cubist_tu$finalModel
 ```
 
 ```{r}
-p_cubist_tu <- predict(m_cubist_tu, testing)
+p_cubist_tu <- predict(m_cubist_tu, testing[-1])
 ```
 
 Correlation:  

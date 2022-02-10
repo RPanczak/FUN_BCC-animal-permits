@@ -185,7 +185,7 @@ summary(m_svm)
 ## Prediction
 
 ```{r}
-p_svm <- predict(m_svm, testing)
+p_svm <- predict(m_svm, testing[-1])
 ```
 
 Correlation:  
@@ -265,7 +265,7 @@ m_svm_tu$finalModel
 ```
 
 ```{r}
-p_svm_tu <- predict(m_svm_tu, testing)
+p_svm_tu <- predict(m_svm_tu, testing[-1])
 ```
 
 Correlation:  
