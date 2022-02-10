@@ -71,60 +71,25 @@ Preparations in file `00.Rmd`.
 Using `IEO` as outcome.  
 
 ```{r}
-# wide_all_n <- read_rds("data/wide_all_n.Rds")
+wide_all_n <- read_rds("data/wide_all_n.Rds") %>% 
+  sf::st_drop_geometry() %>% 
+  # as_tibble() %>% 
+  select(IEO, IEO_d, 
+         akita:last_col()) %>% 
+  rename(outcome = IEO,
+         outcome_d = IEO_d)
 
 wide_all_p <- read_rds("data/wide_all_p.Rds") %>% 
   sf::st_drop_geometry() %>% 
   # as_tibble() %>% 
   select(IEO, IEO_d, 
-         akita:swedish_lapphund) %>% 
+         akita:last_col()) %>% 
   rename(outcome = IEO,
          outcome_d = IEO_d)
 
+# tail(names(wide_all_p), n = 1)
 # skimr::skim(wide_all_p)
 # report::report(wide_all_p)
-```
-
-## Train split
-
-75/25 split, taking into account distribution of deciles:    
-
-```{r}
-inTrain <- createDataPartition(
-  y = wide_all_p$outcome_d,
-  p = .75,
-  list = FALSE
-)
-
-training <- wide_all_p[ inTrain,]
-testing  <- wide_all_p[-inTrain,]
-```
-
-Training data:  
-
-```{r echo=FALSE}
-# nrow(training)
-frq(training, outcome_d)
-```
-
-Testing data:  
-
-```{r echo=FALSE}
-# nrow(testing)
-frq(testing, outcome_d)
-```
-
-```{r include=FALSE}
-training <- select(training, -outcome_d)
-testing <- select(testing, -outcome_d)
-```
-
-Outcome distro checks  
-
-```{r echo=FALSE}
-ggplot() +
-  geom_density(data = training, aes(x = outcome), col = "forestgreen") +
-  geom_density(data = testing, aes(x = outcome), col = "firebrick") 
 ```
 
 ## Checks
@@ -144,6 +109,8 @@ nzv %>%
 ```{r}
 nzv <- nearZeroVar(wide_all_p)
 wide_all_p <- wide_all_p[, -nzv]
+wide_all_n <- wide_all_n[, -nzv]
+rm(nzv)
 ```
 
 ### Correlated breeds
@@ -171,6 +138,51 @@ combo_info <- findLinearCombos(wide_all_p %>% select(-outcome, -outcome_d))
 combo_info
 ```
 
+## Train split
+
+75/25 split, taking into account distribution of deciles:    
+
+```{r}
+inTrain <- createDataPartition(
+  y = wide_all_p$outcome_d,
+  p = .75,
+  list = FALSE
+)
+
+training <- wide_all_p[ inTrain,]
+testing  <- wide_all_p[-inTrain,]
+
+training_weights <- wide_all_n[ inTrain,]
+```
+
+Training data:  
+
+```{r echo=FALSE}
+# nrow(training)
+frq(training, outcome_d)
+```
+
+Testing data:  
+
+```{r echo=FALSE}
+# nrow(testing)
+frq(testing, outcome_d)
+```
+
+```{r include=FALSE}
+training <- select(training, -outcome_d)
+testing <- select(testing, -outcome_d)
+
+training_weights <- select(training_weights, -outcome_d, -outcome)
+```
+
+Outcome distro checks  
+
+```{r echo=FALSE}
+ggplot() +
+  geom_density(data = training, aes(x = outcome), col = "forestgreen") +
+  geom_density(data = testing, aes(x = outcome), col = "firebrick") 
+```
 
 <!-- ------------------------------------------------------------ --> 
 
@@ -181,6 +193,7 @@ combo_info
 ```{r}
 set.seed(12345)
 m_rpart <- rpart(outcome ~ ., data = training)
+m_rpart <- rpart(outcome ~ ., data = training, weights = training_weights)
 ```
 
 ```{r echo=FALSE}
