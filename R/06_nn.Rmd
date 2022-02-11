@@ -1,7 +1,7 @@
 ---
 title: "Dog-SEP"
-subtitle: "Machine learning: regression trees"
-pagetitle: "Dog-SEP: SVM"
+subtitle: "Machine learning: neural networks"
+pagetitle: "Dog-SEP: NN"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
