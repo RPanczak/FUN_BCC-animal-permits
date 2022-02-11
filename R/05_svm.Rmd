@@ -1,6 +1,6 @@
 ---
 title: "Dog-SEP"
-subtitle: "Machine learning: regression trees"
+subtitle: "Machine learning: support vector machine"
 pagetitle: "Dog-SEP: SVM"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -198,12 +198,6 @@ MAE between predicted and actual values:
 
 ```{r}
 MAE(p_svm, testing$outcome)
-```
-
-```{r eval=FALSE, include=FALSE}
-# mean absolute error between actual values and mean value
-# mean(training$outcome) 
-MAE(mean(training$outcome), testing$outcome)
 ```
 
 Distro of predicted (red) nd actual (green): 
