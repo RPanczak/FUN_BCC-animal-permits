@@ -1,5 +1,6 @@
 ---
 layout: default
+title: "Pets as Indicators"
 ---
 
 ## Data sources
