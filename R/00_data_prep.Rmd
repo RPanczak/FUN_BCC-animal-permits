@@ -30,23 +30,18 @@ options(max.print = "75")
 library(pacman)
 p_load(tidyverse, readxl, magrittr, scales,
        janitor, sjmisc, sjPlot, DT, gmodels,
-       sf, tmap)
+       sf, tmap,
+       caret)
 
 tmap_mode("view") # makes map interactive
-
-# library("tidylog")
-# library("conflicted")
-# for (f in getNamespaceExports("tidylog")) {
-#   conflicted::conflict_prefer(f, "tidylog", quiet = TRUE)
-# }
 ```
 
 ```{r knit-setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
-                      fig.width=8, fig.height=6, dpi=300, 
-                      out.width="800px", out.height="600px")
+                      fig.width = 8, fig.height = 6, dpi = 300, 
+                      out.width = "800px", out.height = "600px")
 
 knitr::opts_chunk$set(cache = FALSE,
                       prompt = FALSE,
@@ -1102,6 +1097,137 @@ write_rds(wide_cost_n, "data/wide_cost_n.Rds")
 write_rds(wide_cost_p, "data/wide_cost_p.Rds")
 write_rds(wide_insurance_n, "data/wide_insurance_n.Rds")
 write_rds(wide_insurance_p, "data/wide_insurance_p.Rds")
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# ML data 
+
+## Saves 
+
+Using the Index of Education and Occupation (`IEO`) only as outcome. More info about the index [from ABS](https://www.abs.gov.au/ausstats/abs@.nsf/Lookup/by%20Subject/2033.0.55.001~2016~Main%20Features~IEO~22).  
+
+Keeping all breeds and wide formats as described above; droppping spatial info.  
+
+```{r}
+wide_all_n %<>% 
+  sf::st_drop_geometry() %>% 
+  # as_tibble() %>% 
+  select(IEO, IEO_d, 
+         akita:last_col())
+
+wide_all_p %<>%  
+  sf::st_drop_geometry() %>% 
+  # as_tibble() %>% 
+  select(IEO, IEO_d, 
+         akita:last_col()) %>% 
+  rename(outcome = IEO,
+         outcome_d = IEO_d)
+```
+
+```{r eval=FALSE, include=FALSE}
+tail(names(wide_all_p), n = 1)
+skimr::skim(wide_all_p)
+report::report(wide_all_p)
+```
+
+## Near zero-variance 
+
+```{r}
+nzv <- nearZeroVar(wide_all_p, saveMetrics = TRUE)
+```
+
+```{r echo=FALSE}
+nzv %>% 
+  filter(nzv == TRUE) %>% 
+  datatable()
+```
+
+```{r}
+nzv <- nearZeroVar(wide_all_p)
+wide_all_p <- wide_all_p[, -nzv]
+wide_all_n <- wide_all_n[, -nzv]
+rm(nzv)
+```
+
+```{r}
+wide_all_n %<>% 
+  mutate(weight = rowSums(across(where(is.numeric)))) %>% 
+  select(weight)
+```
+
+## Correlated breeds
+
+```{r}
+descr_cor <- cor(wide_all_p %>% select(-outcome, -outcome_d)) %>% 
+  as_tibble(rownames = "rowname") %>% 
+  pivot_longer(-rowname) %>% 
+  filter(rowname != name) %>% 
+  arrange(desc(value)) %>% 
+  filter(row_number() %% 2 == 1) %>% 
+  mutate(value = scales::number(value, accuracy = 0.01)) %>% 
+  rename(correlation = value)
+```
+
+```{r echo=FALSE}
+descr_cor %>% 
+  datatable()
+```
+
+### Linear combinations
+
+```{r}
+combo_info <- findLinearCombos(wide_all_p %>% select(-outcome, -outcome_d))
+combo_info
+```
+
+## Train split
+
+75/25 split, taking into account distribution of deciles:    
+
+```{r}
+inTrain <- createDataPartition(
+  y = wide_all_p$outcome_d,
+  p = .75,
+  list = FALSE
+)
+
+training <- wide_all_p[ inTrain, ]
+testing  <- wide_all_p[-inTrain, ]
+
+training_weights <- wide_all_n[ inTrain,]
+```
+
+Training data:  
+
+```{r echo=FALSE}
+# nrow(training)
+frq(training, outcome_d)
+```
+
+Testing data:  
+
+```{r echo=FALSE}
+# nrow(testing)
+frq(testing, outcome_d)
+```
+
+```{r include=FALSE}
+training <- select(training, -outcome_d)
+testing <- select(testing, -outcome_d)
+```
+
+Outcome distro checks  
+
+```{r echo=FALSE}
+ggplot() +
+  geom_density(data = training, aes(x = outcome), col = "forestgreen") +
+  geom_density(data = testing, aes(x = outcome), col = "firebrick") 
+```
+
+```{r include=FALSE}
+write_rds(training, "data/training.Rds")
+write_rds(testing, "data/testing.Rds")
 ```
 
 <!-- ----------------------------------------------------- -->

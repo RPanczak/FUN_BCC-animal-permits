@@ -38,8 +38,8 @@ import::from("sjmisc", "frq")
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
-                      fig.width=8, fig.height=6, dpi=300, 
-                      out.width="800px", out.height="600px")
+                      fig.width = 8, fig.height = 6, dpi = 300, 
+                      out.width = "800px", out.height = "600px")
 
 knitr::opts_chunk$set(cache = FALSE,
                       prompt = FALSE,
@@ -68,92 +68,14 @@ Using info from chapter 7 of *Machine Learning with R* [book](https://www.packtp
 
 <!-- ------------------------------------------------------------ --> 
 
-# Data 
-
-## Prepared data
-
-Preparations in file `00.Rmd`.  
-
-Using the Index of Education and Occupation (`IEO`) as outcome. More info about the index [from ABS](https://www.abs.gov.au/ausstats/abs@.nsf/Lookup/by%20Subject/2033.0.55.001~2016~Main%20Features~IEO~22).  
-
-```{r}
-wide_all_p <- read_rds("data/wide_all_p.Rds") %>% 
-  sf::st_drop_geometry() %>% 
-  # as_tibble() %>% 
-  select(IEO, IEO_d, 
-         akita:last_col()) %>% 
-  rename(outcome = IEO,
-         outcome_d = IEO_d)
-
-# tail(names(wide_all_p), n = 1)
-# skimr::skim(wide_all_p)
-# report::report(wide_all_p)
-```
-
-## Near zero-variance 
-
-```{r}
-nzv <- nearZeroVar(wide_all_p %>% 
-                     select(-outcome, -outcome_d), 
-                   saveMetrics = TRUE)
-```
-
-```{r echo=FALSE}
-nzv %>% 
-  filter(nzv == TRUE) %>% 
-  datatable()
-```
-
-```{r}
-nzv <- nearZeroVar(wide_all_p %>% 
-                     select(-outcome, -outcome_d))
-wide_all_p <- wide_all_p[, -nzv]
-rm(nzv)
-```
-
-## Train split
-
-75/25 split, taking into account distribution of deciles:    
-
-```{r}
-inTrain <- createDataPartition(
-  y = wide_all_p$outcome_d,
-  p = .75,
-  list = FALSE
-)
-```
-
-```{r include=FALSE}
-wide_all_p <- select(wide_all_p, -outcome_d)
-```
-
-## Normalize
-
-```{r}
-normalize <- function(x) {
-  return((x - min(x)) / (max(x) - min(x)))
-}
-
-# apply normalization to entire data frame
-wide_all_p <- as.data.frame(lapply(wide_all_p, normalize))
-```
-
-```{r include=FALSE}
-training <- wide_all_p[ inTrain, ]
-testing  <- wide_all_p[-inTrain, ]
-```
-
-Outcome distro checks  
-
-```{r echo=FALSE}
-ggplot() +
-  geom_density(data = training, aes(x = outcome), col = "forestgreen") +
-  geom_density(data = testing, aes(x = outcome), col = "firebrick") 
-```
-
-<!-- ------------------------------------------------------------ --> 
-
 # Analysis with `neuralnet`
+
+## Data 
+
+```{r include=FALSE}
+training <- read_rds("data/training.Rds")
+testing <- read_rds("data/testing.Rds")
+```
 
 ## Training
 

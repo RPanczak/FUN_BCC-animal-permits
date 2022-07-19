@@ -40,8 +40,8 @@ tmap_mode("view")
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
-                      fig.width=8, fig.height=6, dpi=300, 
-                      out.width="800px", out.height="600px")
+                      fig.width = 8, fig.height = 6, dpi = 300, 
+                      out.width = "800px", out.height = "600px")
 
 knitr::opts_chunk$set(cache = FALSE,
                       prompt = FALSE,
