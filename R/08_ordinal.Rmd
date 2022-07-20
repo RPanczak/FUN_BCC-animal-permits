@@ -1,0 +1,343 @@
+---
+title: "Dog-SEP"
+subtitle: "Machine learning: ordinal outcome"
+pagetitle: "Dog-SEP: ordinal"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: no
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    self_contained: true
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+---
+
+<!-- ------------------------------------------------------------ --> 
+
+```{r r-setup, include=FALSE}
+set.seed(12345)
+options(scipen = 999)
+options(max.print = "75")
+
+library(pacman)
+p_load(tidyverse, magrittr, DT,
+       caret, ordinalForest)
+
+import::from("sjmisc", "frq")
+```
+
+```{r knit-setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width = 8, fig.height = 6, dpi = 300, 
+                      out.width = "800px", out.height = "600px")
+
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+
+knitr::opts_knit$set(width = 75)
+
+mu <- Hmisc::markupSpecs$html
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Background 
+
+Using info from chapter 6 of *Machine Learning with R* [book](https://www.packtpub.com/product/machine-learning-with-r-third-edition/9781788295864), `caret` package [manual](https://topepo.github.io/caret/index.html), and `Cubist` package [vignette](https://cran.r-project.org/web/packages/Cubist/vignettes/cubist.html).  
+
+<!-- ------------------------------------------------------------ --> 
+
+# Data 
+
+Using the Index of Education and Occupation (`IEO`) only as outcome. More info about the index [from ABS](https://www.abs.gov.au/ausstats/abs@.nsf/Lookup/by%20Subject/2033.0.55.001~2016~Main%20Features~IEO~22).  
+
+Keeping all breeds and wide formats as described above; droppping spatial info.  
+
+```{r}
+wide_all_n <- read_rds("data/wide_all_n.Rds") %>% 
+  sf::st_drop_geometry() %>% 
+  # as_tibble() %>% 
+  select(IEO_d, 
+         akita:last_col())
+
+wide_all_p <- read_rds("data/wide_all_p.Rds") %>% 
+  sf::st_drop_geometry() %>% 
+  # as_tibble() %>% 
+  select(IEO_d, 
+         akita:last_col()) %>% 
+  rename(outcome = IEO_d)
+```
+
+```{r eval=FALSE, include=FALSE}
+tail(names(wide_all_p), n = 1)
+skimr::skim(wide_all_p)
+report::report(wide_all_p)
+```
+
+## Near zero-variance 
+
+```{r}
+nzv <- nearZeroVar(wide_all_p, saveMetrics = TRUE)
+```
+
+```{r echo=FALSE}
+nzv %>% 
+  filter(nzv == TRUE) %>% 
+  datatable()
+```
+
+```{r}
+nzv <- nearZeroVar(wide_all_p)
+wide_all_p <- wide_all_p[, -nzv]
+wide_all_n <- wide_all_n[, -nzv]
+rm(nzv)
+```
+
+```{r}
+wide_all_n %<>% 
+  mutate(weight = rowSums(across(where(is.numeric)))) %>% 
+  select(weight)
+```
+
+## Train split
+
+75/25 split, taking into account distribution of deciles:    
+
+```{r}
+inTrain <- createDataPartition(
+  y = wide_all_p$outcome,
+  p = .75,
+  list = FALSE
+)
+
+training <- wide_all_p[ inTrain, ]
+testing  <- wide_all_p[-inTrain, ]
+
+training_weights <- wide_all_n[ inTrain,]
+```
+
+Training data:  
+
+```{r echo=FALSE}
+frq(training, outcome)
+```
+
+Testing data:  
+
+```{r echo=FALSE}
+frq(testing, outcome)
+```
+
+Outcome distro checks  
+
+```{r echo=FALSE}
+ggplot() +
+  geom_bar(data = training, aes(x = outcome), fill = "forestgreen") +
+  geom_bar(data = testing, aes(x = outcome), fill = "firebrick") 
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Analysis with `ordinalForest`
+
+## Training 
+
+```{r}
+set.seed(12345)
+of <- ordfor(depvar = "outcome", 
+                    data = training, 
+                    nsets = 1000, 
+                    ntreeperdiv = 100,
+                    ntreefinal = 5000, 
+                    perffunction = "equal")
+```
+
+```{r echo=FALSE}
+of
+# summary(of)
+```
+
+## Variable importance {.tabset}
+
+```{r echo=FALSE}
+sort(of$varimp, decreasing = TRUE)
+```
+
+### Amstaf
+
+```{r echo=FALSE}
+boxplot(training$american_staffordshire_terrier ~ training$outcome, horizontal = TRUE)
+```
+
+### Poodle
+
+```{r echo=FALSE}
+boxplot(training$poodle ~ training$outcome, horizontal = TRUE)
+```
+
+## Prediction
+
+```{r}
+predicted <- predict(of, testing)
+```
+
+```{r}
+# gmodels::CrossTable(testing$outcome, testing$outcome)
+
+confusionMatrix(testing$outcome, predicted$ypred)
+
+perff_equal(testing$outcome, of)
+```
+
+## Tuning
+
+```{r}
+modelLookup("ordinalRF")
+```
+
+Using grid of parameters to explore:  
+
+```{r}
+grid_tu <-  expand.grid(nsets = seq(500, 2000, 500),
+                        ntreeperdiv = seq(50, 250, 50),
+                        ntreefinal = seq(1000, 10000, 1000))
+
+nrow(grid_tu)
+```
+
+```{r}
+p_load(doParallel)
+
+cl <- makePSOCKcluster(parallel::detectCores())
+registerDoParallel(cl)
+
+set.seed(12345)
+of_tu <- train(outcome ~ ., 
+                    data = training, 
+                    method = "ordinalRF",
+                    tuneGrid = grid_tu)
+
+stopCluster(cl)
+p_unload(doParallel)
+```
+
+```{r echo=FALSE}
+# summary(of_tu)
+ggplot(of_tu)
+```
+
+```{r}
+of_tu$finalModel
+```
+
+```{r}
+vi = data.frame(var = names(sort(of_tu$finalModel$varimp)),
+                varimp = sort(of_tu$finalModel$varimp))
+
+barplot(vi$varimp,
+        names.arg = vi$var,
+        horiz = TRUE)
+```
+
+```{r}
+predicted_tu <- predict(of_tu, testing)
+```
+
+```{r}
+# gmodels::CrossTable(of_tu, predicted_tu$predicted_tu)
+
+confusionMatrix(testing$outcome, predicted_tu)
+
+# perff_equal(testing$outcome, of_tu$finalModel)
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Alternative solutions
+
+## rpartScore
+
+```{r}
+m <- train(outcome ~ ., data = training, method = "rpartScore")
+m
+ggplot(m)
+
+p <- predict(m, training)
+
+confusionMatrix(training$outcome, p)
+```
+
+## ordinalNet
+
+```{r eval=FALSE, include=FALSE}
+m <- train(outcome ~ ., data = training, method = "ordinalNet")
+m
+
+plot(m)
+
+p <- predict(m, training)
+
+confusionMatrix(training$outcome, p)
+```
+
+## polr
+
+```{r}
+m <- train(outcome ~ ., data = training, method = "polr")
+m
+ggplot(m)
+
+p <- predict(m, training)
+
+confusionMatrix(training$outcome, p)
+```
+
+## vglmCumulative
+
+```{r}
+m <- train(outcome ~ ., data = training, method = "vglmCumulative")
+m
+ggplot(m)
+
+p <- predict(m, training)
+
+confusionMatrix(training$outcome, p)
+```
+
+## vglmContRatio
+
+```{r}
+m <- train(outcome ~ ., data = training, method = "vglmContRatio")
+m
+ggplot(m)
+
+p <- predict(m, training)
+
+confusionMatrix(training$outcome, p)
+```
+
+## vglmAdjCat
+
+```{r}
+m <- train(outcome ~ ., data = training, method = "vglmAdjCat")
+m
+ggplot(m)
+
+p <- predict(m, training)
+
+confusionMatrix(training$outcome, p)
+```
