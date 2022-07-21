@@ -73,8 +73,35 @@ Using info from chapter 7 of *Machine Learning with R* [book](https://www.packtp
 ## Data 
 
 ```{r include=FALSE}
-training <- read_rds("data/training.Rds")
-testing <- read_rds("data/testing.Rds")
+wide_all_p <- read_rds("data/wide_all_p.Rds")
+
+wide_all_p %<>%  
+  sf::st_drop_geometry() %>% 
+  # as_tibble() %>% 
+  select(IEO, IEO_d, 
+         akita:last_col()) %>% 
+  rename(outcome = IEO)
+
+nzv <- nearZeroVar(wide_all_p, saveMetrics = TRUE)
+nzv <- nearZeroVar(wide_all_p)
+wide_all_p <- wide_all_p[, -nzv]
+
+inTrain <- createDataPartition(
+  y = wide_all_p$IEO_d,
+  p = .75,
+  list = FALSE
+)
+
+wide_all_p <- select(wide_all_p, -IEO_d)
+
+normalize <- function(x) {
+  return((x - min(x)) / (max(x) - min(x)))
+}
+
+wide_all_p <- as.data.frame(lapply(wide_all_p, normalize))
+
+training <- wide_all_p[ inTrain, ]
+testing  <- wide_all_p[-inTrain, ]
 ```
 
 ## Training
@@ -132,8 +159,8 @@ modelLookup("neuralnet")
 Using grid of parameters to explore:  
 
 ```{r}
-grid_tu <-  expand.grid(layer1  = seq(5, 20, 1),
-                        layer2  = seq(5, 20, 1),
+grid_tu <-  expand.grid(layer1  = seq(15, 25, 1),
+                        layer2  = seq(15, 25, 1),
                         layer3  = (1))
 
 nrow(grid_tu)
