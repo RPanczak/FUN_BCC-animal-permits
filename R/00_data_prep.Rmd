@@ -1228,6 +1228,7 @@ ggplot() +
 ```{r include=FALSE}
 write_rds(training, "data/training.Rds")
 write_rds(testing, "data/testing.Rds")
+write_rds(training_weights, "data/training_weights.Rds")
 ```
 
 <!-- ----------------------------------------------------- -->
