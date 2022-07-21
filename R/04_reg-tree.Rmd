@@ -85,6 +85,10 @@ m_rpart <- rpart(outcome ~ ., data = training)
 # m_rpart <- rpart(outcome ~ ., data = training, weights = training_weights)
 ```
 
+```{r include=FALSE}
+write_rds(m_rpart, "results/m_rpart.Rds")
+```
+
 ```{r echo=FALSE}
 m_rpart
 # summary(m_rpart)
@@ -146,7 +150,7 @@ modelLookup("rpart")
 Using grid of parameters to explore:  
 
 ```{r}
-grid_tu <-  expand.grid(cp = seq(0,1,0.01))
+grid_tu <-  expand.grid(cp = seq(0, 1, 0.01))
 
 nrow(grid_tu)
 ```
@@ -169,6 +173,10 @@ m_rpart_tu <- train(outcome ~ .,
 
 stopCluster(cl)
 p_unload(doParallel)
+```
+
+```{r include=FALSE}
+write_rds(m_rpart_tu, "results/m_rpart_tu.Rds")
 ```
 
 ```{r echo=FALSE}
@@ -230,6 +238,10 @@ set.seed(12345)
 m_cubist <- cubist(x = training[-1], y = training$outcome)
 ```
 
+```{r include=FALSE}
+write_rds(m_cubist, "results/m_cubist.Rds")
+```
+
 ```{r echo=FALSE}
 # m_cubist
 summary(m_cubist)
@@ -238,7 +250,6 @@ summary(m_cubist)
 ## Prediction
 
 ```{r}
-# generate predictions for the model
 p_cubist <- predict(m_cubist, testing[-1])
 ```
 
@@ -280,8 +291,8 @@ modelLookup("cubist")
 Using grid of parameters to explore:  
 
 ```{r}
-grid_tu <-  expand.grid(committees = (40:50), 
-                        neighbors = (0:5))
+grid_tu <-  expand.grid(committees = (50:60), 
+                        neighbors = (5:8))
 
 nrow(grid_tu)
 ```
@@ -303,6 +314,10 @@ m_cubist_tu <- train(outcome ~ .,
 
 stopCluster(cl)
 p_unload(doParallel)
+```
+
+```{r include=FALSE}
+write_rds(m_cubist_tu, "results/m_cubist_tu.Rds")
 ```
 
 ```{r echo=FALSE}
