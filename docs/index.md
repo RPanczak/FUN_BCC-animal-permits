@@ -20,20 +20,27 @@ Australian Bureau of Statistics' data on [Socio-Economic Indexes for Areas (SEIF
 - geographical data of [BCC Suburbs and Adjoining Suburbs](https://www.data.brisbane.qld.gov.au/data/dataset/suburbs-and-adjoining-suburbs/resource/6fb89462-5ac5-4589-8576-cdca03652bc8)  
 - [ABS SSC boundaries](https://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/1270.0.55.003July%202016?OpenDocument)  
 
-## Data wrangling 
+## Other materials 
 
-Data preparation steps are documented [here](00_data_prep.html).  
 OSF project is [here](https://osf.io/c2gyw/).  
 Preregistration: [OSF](https://osf.io/7x4t3), [doc](https://rpanczak.github.io/FUN_BCC-animals/01_preregistration.html).  
 
-## Analyses of breeds & SEIFA
+## Data wrangling 
+
+Data preparation steps are documented [here](00_data_prep.html). 
+
+## EDA of breeds & SEIFA
 
  - [Dog costs analysis](02_dog-cost.html)  
  - [Dog insurance cost analysis](03_dog-insurance.html)  
- - [ML 1 - regression trees on dog breeds](04_reg-tree.html)  
- - [ML 2 - SVN on dog breeds](05_svm.html)  
- - [ML 3 - neural networks on dog breeds](06_nn.html)  
- - [ML 4 - random forests on dog breeds](07_rf.html)  
+ 
+## Machine learning models on breeds & SEIFA
+
+ - [ML 1 - regression trees](04_reg-tree.html)  
+ - [ML 2 - SVN](05_svm.html)  
+ - [ML 3 - neural networks](06_nn.html)  
+ - [ML 4 - random forests](07_rf.html)  
+ - [ML 5 - XGBoost](09_xgb.html)  
 
 ## Analyses of complaints & SEIFA
 
