@@ -54,7 +54,6 @@ mu <- Hmisc::markupSpecs$html
 ```
 
 ```{r include=FALSE}
-# function to calculate the mean absolute error
 MAE <- function(actual, predicted) {
   mean(abs(actual - predicted))  
 }
@@ -83,10 +82,6 @@ testing <- read_rds("data/testing.Rds")
 set.seed(12345)
 m_rpart <- rpart(outcome ~ ., data = training)
 # m_rpart <- rpart(outcome ~ ., data = training, weights = training_weights)
-```
-
-```{r include=FALSE}
-write_rds(m_rpart, "results/m_rpart.Rds")
 ```
 
 ```{r echo=FALSE}
@@ -150,7 +145,7 @@ modelLookup("rpart")
 Using grid of parameters to explore:  
 
 ```{r}
-grid_tu <-  expand.grid(cp = seq(0, 1, 0.01))
+grid_tu <- expand.grid(cp = seq(0, 1, 0.01))
 
 nrow(grid_tu)
 ```
@@ -238,10 +233,6 @@ set.seed(12345)
 m_cubist <- cubist(x = training[-1], y = training$outcome)
 ```
 
-```{r include=FALSE}
-write_rds(m_cubist, "results/m_cubist.Rds")
-```
-
 ```{r echo=FALSE}
 # m_cubist
 summary(m_cubist)
@@ -277,7 +268,7 @@ Variable importance:
 
 ```{r}
 varImp(m_cubist) %>% 
-    as_tibble(rownames = "breed")
+  as_tibble(rownames = "breed")
 
 # vip::vi(m_cubist)
 ```
