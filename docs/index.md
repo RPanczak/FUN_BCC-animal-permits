@@ -41,6 +41,7 @@ Data preparation steps are documented [here](00_data_prep.html).
  - [ML 3 - neural networks](06_nn.html)  
  - [ML 4 - random forests](07_rf.html)  
  - [ML 5 - XGBoost](09_xgb.html)  
+ - [ML 6 - DALEX model comparisons](10_DALEX.html)  
 
 ## Analyses of complaints & SEIFA
 

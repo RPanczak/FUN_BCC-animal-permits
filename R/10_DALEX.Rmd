@@ -1,0 +1,194 @@
+---
+title: "Dog-SEP"
+subtitle: "Machine learning: DALEX"
+pagetitle: "Dog-SEP: DALEX"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: no
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    self_contained: true
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+---
+
+<!-- ------------------------------------------------------------ --> 
+
+```{r r-setup, include=FALSE}
+set.seed(12345)
+options(scipen = 999)
+options(max.print = "75")
+
+library(pacman)
+p_load(tidyverse, magrittr, DT,
+       ModelMetrics, 
+       DALEX, caret)
+
+import::from("sjmisc", "frq")
+```
+
+```{r knit-setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width = 8, fig.height = 6, dpi = 300, 
+                      out.width = "800px", out.height = "600px")
+
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+
+knitr::opts_knit$set(width = 75)
+
+mu <- Hmisc::markupSpecs$html
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Setup 
+
+## Background 
+
+Using `DALEX` package to explore results from various models fitted with `caret. Based on info from [here](https://htmlpreview.github.io/?https://github.com/ModelOriented/DALEX-docs/blob/master/vignettes/DALEX_caret.html). 
+
+## Load data
+
+```{r include=FALSE}
+training <- read_rds("data/training.Rds")
+testing <- read_rds("data/testing.Rds")
+
+training_x <- as.matrix(select(training, -outcome))
+training_y <- training$outcome
+
+testing_x <- as.matrix(select(testing, -outcome))
+testing_y <- testing$outcome
+```
+
+## Load results
+
+```{r}
+# reg trees
+m_cubist_tu <- read_rds("results/m_cubist_tu.Rds")
+
+# rf x2
+m_rf_tu <- read_rds("results/m_rf_tu.Rds")
+m_rf2_tu <- read_rds("results/m_rf2_tu.Rds")
+
+#xgb
+m_xgb_tu <- read_rds("results/m_xgb_tu.Rds")
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# The explain() function
+
+```{r}
+explainer_cubist <- DALEX::explain(m_cubist_tu, label = "cubist", 
+                                   data = training, y = training$outcome, 
+                                   verbose = FALSE)
+
+explainer_rf1 <- DALEX::explain(m_rf_tu, label = "rf1", 
+                                data = training, y = training$outcome, 
+                                verbose = FALSE)
+
+explainer_rf2 <- DALEX::explain(m_rf2_tu, label = "rf2", 
+                                data = training, y = training$outcome, 
+                                verbose = FALSE)
+
+explainer_xgb <- DALEX::explain(m_xgb_tu, label = "xgb", 
+                                data = training_x, y = training_y, 
+                                verbose = FALSE)
+```
+
+# Model performance
+
+```{r}
+(mp_cubist <- model_performance(explainer_cubist))
+(mp_rf1 <- model_performance(explainer_rf1))
+(mp_rf2 <- model_performance(explainer_rf2))
+(mp_xgb <- model_performance(explainer_xgb))
+```
+
+```{r echo=FALSE}
+plot(mp_cubist, mp_rf1, mp_rf2, mp_xgb)
+```
+
+```{r echo=FALSE}
+plot(mp_cubist, mp_rf1, mp_rf2, mp_xgb, geom = "boxplot")
+```
+
+# Variable importance
+
+```{r}
+vi_cubist <- model_parts(explainer_cubist, loss_function = loss_root_mean_square)
+vi_rf1 <- model_parts(explainer_rf1, loss_function = loss_root_mean_square)
+vi_rf2 <- model_parts(explainer_rf2, loss_function = loss_root_mean_square)
+vi_xgb <- model_parts(explainer_xgb, loss_function = loss_root_mean_square)
+```
+
+```{r echo=FALSE}
+plot(vi_cubist, vi_rf1, vi_rf2, vi_xgb)
+```
+
+```{r echo=FALSE}
+plot(vi_cubist)
+```
+
+# Partial Dependence Plot
+
+```{r}
+pdp_cubist <- model_profile(explainer_cubist, variable = "poodle", type = "partial")
+pdp_rf1 <- model_profile(explainer_rf1, variable = "poodle", type = "partial")
+pdp_rf2 <- model_profile(explainer_rf2, variable = "poodle", type = "partial")
+pdp_xgb <- model_profile(explainer_xgb, variable = "poodle", type = "partial")
+```
+
+```{r echo=FALSE}
+plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb)
+```
+
+```{r}
+pdp_cubist <- model_profile(explainer_cubist, variable = "staffordshire_bull_terrier", type = "partial")
+pdp_rf1 <- model_profile(explainer_rf1, variable = "staffordshire_bull_terrier", type = "partial")
+pdp_rf2 <- model_profile(explainer_rf2, variable = "staffordshire_bull_terrier", type = "partial")
+pdp_xgb <- model_profile(explainer_xgb, variable = "staffordshire_bull_terrier", type = "partial")
+```
+
+```{r echo=FALSE}
+plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb)
+```
+
+# Acumulated Local Effects plot
+
+```{r}
+ale_cubist <- model_profile(explainer_cubist, variable = "poodle", type = "accumulated")
+ale_rf1 <- model_profile(explainer_rf1, variable = "poodle", type = "accumulated")
+ale_rf2 <- model_profile(explainer_rf2, variable = "poodle", type = "accumulated")
+ale_xgb <- model_profile(explainer_xgb, variable = "poodle", type = "accumulated")
+```
+
+```{r echo=FALSE}
+plot(ale_cubist, ale_rf1, ale_rf2, ale_xgb)
+```
+
+```{r}
+ale_cubist <- model_profile(explainer_cubist, variable = "staffordshire_bull_terrier", type = "accumulated")
+ale_rf1 <- model_profile(explainer_rf1, variable = "staffordshire_bull_terrier", type = "accumulated")
+ale_rf2 <- model_profile(explainer_rf2, variable = "staffordshire_bull_terrier", type = "accumulated")
+ale_xgb <- model_profile(explainer_xgb, variable = "staffordshire_bull_terrier", type = "accumulated")
+```
+
+```{r echo=FALSE}
+plot(ale_cubist, ale_rf1, ale_rf2, ale_xgb)
+```
