@@ -513,25 +513,25 @@ xgb.plot.importance(importance, top_n = 15)
 ```
 
 ```{r}
-p_xgb_tu <- predict(m_xgb_tu, data_x)
+p_xgb_tu <- predict(m_xgb_tu, training_x)
 ```
 
 Correlation:  
 
 ```{r}
-cor(p_xgb_tu, data_y)
+cor(p_xgb_tu, training_y)
 ```
 
 MAE:  
 
 ```{r}
-ModelMetrics::mae(data_y, p_xgb_tu)
+ModelMetrics::mae(training_y, p_xgb_tu)
 ```
 
 RMSE:  
 
 ```{r}
-ModelMetrics::rmse(data_y, p_xgb_tu)
+ModelMetrics::rmse(training_y, p_xgb_tu)
 ```
 
 Distro of predicted (red) nd actual (green): 
@@ -539,7 +539,7 @@ Distro of predicted (red) nd actual (green):
 ```{r echo=FALSE}
 ggplot() +
   geom_density(data = as.data.frame(p_xgb_tu), aes(x = p_xgb_tu), col = "firebrick") +
-  geom_density(data = as.data.frame(data_y), aes(x = data_y), col = "forestgreen") 
+  geom_density(data = as.data.frame(training_y), aes(x = training_y), col = "forestgreen") 
 ```
 
 ### Tuned model
@@ -569,25 +569,25 @@ xgb.plot.importance(importance, top_n = 15)
 ```
 
 ```{r}
-p_xgb_tu <- predict(m_xgb_tu, data_x)
+p_xgb_tu <- predict(m_xgb_tu, training_x)
 ```
 
 Correlation:  
 
 ```{r}
-cor(p_xgb_tu, data_y)
+cor(p_xgb_tu, training_y)
 ```
 
 MAE:  
 
 ```{r}
-ModelMetrics::mae(data_y, p_xgb_tu)
+ModelMetrics::mae(training_y, p_xgb_tu)
 ```
 
 RMSE:  
 
 ```{r}
-ModelMetrics::rmse(data_y, p_xgb_tu)
+ModelMetrics::rmse(training_y, p_xgb_tu)
 ```
 
 Distro of predicted (red) nd actual (green): 
@@ -595,5 +595,5 @@ Distro of predicted (red) nd actual (green):
 ```{r echo=FALSE}
 ggplot() +
   geom_density(data = as.data.frame(p_xgb_tu), aes(x = p_xgb_tu), col = "firebrick") +
-  geom_density(data = as.data.frame(data_y), aes(x = data_y), col = "forestgreen") 
+  geom_density(data = as.data.frame(training_y), aes(x = training_y), col = "forestgreen") 
 ```
