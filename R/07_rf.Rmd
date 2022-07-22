@@ -54,7 +54,6 @@ mu <- Hmisc::markupSpecs$html
 ```
 
 ```{r include=FALSE}
-# function to calculate the mean absolute error
 MAE <- function(actual, predicted) {
   mean(abs(actual - predicted))  
 }
@@ -134,7 +133,7 @@ modelLookup("rf")
 Using grid of parameters to explore:  
 
 ```{r}
-grid_tu <-  expand.grid(mtry = seq(5, ncol(training) - 1, 1))
+grid_tu <- expand.grid(mtry = seq(5, ncol(training) - 1, 1))
 
 nrow(grid_tu)
 ```
@@ -156,6 +155,10 @@ m_rf_tu <- train(outcome ~ .,
 
 stopCluster(cl)
 p_unload(doParallel)
+```
+
+```{r include=FALSE}
+write_rds(m_rf_tu, "results/m_rf_tu.Rds")
 ```
 
 ```{r echo=FALSE}
@@ -206,16 +209,16 @@ ggplot() +
 
 ```{r}
 set.seed(12345)
-m_rf <- ranger(outcome ~ ., data = training, 
-               importance = "impurity") # impurity, impurity_corrected, permutation
+m_rf2 <- ranger(outcome ~ ., data = training, 
+                importance = "impurity") # impurity, impurity_corrected, permutation
 ```
 
 ```{r echo=FALSE}
-summary(m_rf)
+summary(m_rf2)
 ```
 
 ```{r echo=FALSE}
-importance(m_rf) %>% 
+importance(m_rf2) %>% 
   as_tibble(rownames = "breed") %>% 
   arrange(desc(value)) %>% 
   slice(1:20) %>% 
@@ -228,19 +231,19 @@ importance(m_rf) %>%
 ## Prediction
 
 ```{r}
-p_rf <- predict(m_rf, testing[-1])
+p_rf2 <- predict(m_rf2, testing[-1])
 ```
 
 Correlation:  
 
 ```{r}
-cor(p_rf$predictions, testing$outcome)
+cor(p_rf2$predictions, testing$outcome)
 ```
 
 MAE between predicted and actual values:  
 
 ```{r}
-MAE(p_rf$predictions, testing$outcome)
+MAE(p_rf2$predictions, testing$outcome)
 ```
 
 Distro of predicted (red) nd actual (green): 
@@ -250,7 +253,7 @@ Distro of predicted (red) nd actual (green):
 # summary(testing$outcome)
 
 ggplot() +
-  geom_density(data = as.data.frame(p_rf$predictions), aes(x = p_rf$predictions), col = "firebrick") +
+  geom_density(data = as.data.frame(p_rf2$predictions), aes(x = p_rf2$predictions), col = "firebrick") +
   geom_density(data = testing, aes(x = outcome), col = "forestgreen") 
 ```
 
@@ -263,9 +266,9 @@ modelLookup("ranger")
 Using grid of parameters to explore:  
 
 ```{r}
-grid_tu <-  expand.grid(mtry = seq(5, ncol(training) - 1, 1),
-                        splitrule = c("variance", "extratrees", "maxstat", "beta"),
-                        min.node.size = seq(3, 30, 1))
+grid_tu <- expand.grid(mtry = seq(5, ncol(training) - 1, 1),
+                       splitrule = c("variance", "extratrees", "maxstat", "beta"),
+                       min.node.size = seq(3, 30, 1))
 
 nrow(grid_tu)
 ```
@@ -277,41 +280,45 @@ cl <- makePSOCKcluster(parallel::detectCores())
 registerDoParallel(cl)
 
 set.seed(12345)
-m_rf_tu <- train(outcome ~ .,
-                 method = "ranger",
-                 data = training,
-                 # weights = training_weights, 
-                 metric = "RMSE",
-                 # metric = "Rsquared",
-                 tuneGrid = grid_tu)
+m_rf2_tu <- train(outcome ~ .,
+                  method = "ranger",
+                  data = training,
+                  # weights = training_weights, 
+                  metric = "RMSE",
+                  # metric = "Rsquared",
+                  tuneGrid = grid_tu)
 
 stopCluster(cl)
 p_unload(doParallel)
 ```
 
+```{r include=FALSE}
+write_rds(m_rf2_tu, "results/m_rf2_tu.Rds")
+```
+
 ```{r echo=FALSE}
 # summary(m_rf_tu)
-ggplot(m_rf_tu)
+ggplot(m_rf2_tu)
 ```
 
 ```{r}
-m_rf_tu$finalModel
+m_rf2_tu$finalModel
 ```
 
 ```{r}
-p_rf_tu <- predict(m_rf_tu, testing[-1])
+p_rf2_tu <- predict(m_rf2_tu, testing[-1])
 ```
 
 Correlation:  
 
 ```{r}
-cor(p_rf_tu, testing$outcome)
+cor(p_rf2_tu, testing$outcome)
 ```
 
 MAE between predicted and actual values:  
 
 ```{r}
-MAE(p_rf_tu, testing$outcome)
+MAE(p_rf2_tu, testing$outcome)
 ```
 
 Distro of predicted (red) nd actual (green): 
@@ -321,6 +328,6 @@ Distro of predicted (red) nd actual (green):
 # summary(testing$outcome)
 
 ggplot() +
-  geom_density(data = as.data.frame(p_rf_tu), aes(x = p_rf_tu), col = "firebrick") +
+  geom_density(data = as.data.frame(p_rf2_tu), aes(x = p_rf2_tu), col = "firebrick") +
   geom_density(data = testing, aes(x = outcome), col = "forestgreen") 
 ```
