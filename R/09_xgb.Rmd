@@ -1,0 +1,599 @@
+---
+title: "Dog-SEP"
+subtitle: "Machine learning: XGBoost"
+pagetitle: "Dog-SEP: XGBoost"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: no
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    self_contained: true
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+---
+
+<!-- ------------------------------------------------------------ --> 
+
+```{r r-setup, include=FALSE}
+set.seed(12345)
+options(scipen = 999)
+options(max.print = "75")
+
+library(pacman)
+p_load(tidyverse, magrittr, DT,
+       ModelMetrics, 
+       caret, xgboost)
+
+import::from("sjmisc", "frq")
+```
+
+```{r knit-setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width = 8, fig.height = 6, dpi = 300, 
+                      out.width = "800px", out.height = "600px")
+
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+
+knitr::opts_knit$set(width = 75)
+
+mu <- Hmisc::markupSpecs$html
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Background 
+
+Using info from @jani notebook on [kaggle](https://www.kaggle.com/code/pelkoja/visual-xgboost-tuning-with-caret/report). 
+
+<!-- ------------------------------------------------------------ --> 
+
+# Testing base model
+
+Using default settings.  
+
+## Data 
+
+Needs to be in the form of matrix, without the outcome.  
+
+```{r include=FALSE}
+training <- read_rds("data/training.Rds")
+testing <- read_rds("data/testing.Rds")
+
+training_x <- as.matrix(select(training, -outcome))
+training_y <- training$outcome
+
+testing_x <- as.matrix(select(testing, -outcome))
+testing_y <- testing$outcome
+```
+
+## Training 
+
+```{r warning=FALSE}
+grid_default <- expand.grid(
+  nrounds = 100,
+  max_depth = 6,
+  eta = 0.3,
+  gamma = 0,
+  colsample_bytree = 1,
+  min_child_weight = 1,
+  subsample = 1
+)
+
+train_control <- caret::trainControl(
+  method = "none",
+  verboseIter = FALSE, # no training log
+  allowParallel = TRUE  
+)
+
+m_xgb <- caret::train(
+  x = training_x,
+  y = training_y,
+  trControl = train_control,
+  tuneGrid = grid_default,
+  method = "xgbTree",
+  verbose = TRUE,
+  verbosity = 0
+)
+```
+
+```{r echo=FALSE}
+summary(m_xgb$finalModel)
+```
+
+Feature importance:  
+
+```{r}
+importance <- xgb.importance(model = m_xgb$finalModel)
+```
+
+```{r}
+xgb.plot.importance(importance, top_n = 15)
+```
+
+## Prediction
+
+```{r}
+p_xgb <- predict(m_xgb$finalModel, testing_x)
+```
+
+Correlation:  
+
+```{r}
+cor(p_xgb, testing_y)
+```
+
+MAE:  
+
+```{r}
+ModelMetrics::mae(testing_y, p_xgb)
+```
+
+RMSE:  
+
+```{r}
+ModelMetrics::rmse(p_xgb, testing_y)
+```
+
+Distro of predicted (red) nd actual (green): 
+
+```{r echo=FALSE}
+# summary(p_xgb)
+# summary(testing_y)
+
+ggplot() +
+  geom_density(data = as.data.frame(p_xgb), aes(x = p_xgb), col = "firebrick") +
+  geom_density(data = data.frame(testing_y), aes(x = testing_y), col = "forestgreen") 
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Tuning
+
+## Training 
+
+Possible parameters  
+
+```{r}
+modelLookup("xgbTree")
+```
+
+### Number of Iterations and the Learning Rate
+
+Using grid of parameters to explore:  
+
+```{r warning=FALSE}
+nrounds <- 1000
+
+tune_grid <- expand.grid(
+  nrounds = seq(from = 200, to = nrounds, by = 50),
+  eta = c(0.025, 0.05, 0.1, 0.3),
+  max_depth = c(2, 3, 4, 5),
+  gamma = 0,
+  colsample_bytree = 1,
+  min_child_weight = 1,
+  subsample = 1
+)
+
+tune_control <- caret::trainControl(
+  method = "cv", # cross-validation
+  number = 3, # with n folds 
+  # index = createFolds(tr_treated$Id_clean), # fix the folds
+  verboseIter = FALSE, # no training log
+  allowParallel = TRUE 
+)
+
+set.seed(12345)
+
+xgb_tune <- caret::train(
+  x = training_x,
+  y = training_y,
+  trControl = tune_control,
+  tuneGrid = tune_grid,
+  method = "xgbTree",
+  verbose = FALSE,
+  verbosity = 0
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+xgb_tune$finalModel
+```
+
+```{r}
+xgb_tune$bestTune
+```
+
+```{r echo=FALSE}
+ggplot(xgb_tune)
+```
+
+```{r}
+round(min(xgb_tune$results$RMSE), digits = 5)
+```
+
+### Maximum Depth and Minimum Child Weight
+
+```{r warning=FALSE}
+tune_grid2 <- expand.grid(
+  nrounds = seq(from = 50, to = nrounds, by = 50),
+  eta = xgb_tune$bestTune$eta,
+  max_depth = ifelse(xgb_tune$bestTune$max_depth == 2,
+                     c(xgb_tune$bestTune$max_depth:4),
+                     xgb_tune$bestTune$max_depth - 1:xgb_tune$bestTune$max_depth + 1),
+  gamma = 0,
+  colsample_bytree = 1,
+  min_child_weight = c(1, 2, 3, 4),
+  subsample = 1
+)
+
+set.seed(12345)
+
+xgb_tune2 <- caret::train(
+  x = training_x,
+  y = training_y,
+  trControl = tune_control,
+  tuneGrid = tune_grid2,
+  method = "xgbTree",
+  verbose = FALSE,
+  verbosity = 0
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+xgb_tune2$finalModel
+```
+
+```{r}
+xgb_tune2$bestTune
+```
+
+```{r echo=FALSE}
+ggplot(xgb_tune2)
+```
+
+```{r}
+round(min(xgb_tune2$results$RMSE), digits = 5)
+```
+
+### Column and Row Sampling
+
+```{r warning=FALSE}
+tune_grid3 <- expand.grid(
+  nrounds = seq(from = 50, to = nrounds, by = 50),
+  eta = xgb_tune$bestTune$eta,
+  max_depth = xgb_tune2$bestTune$max_depth,
+  gamma = 0,
+  colsample_bytree = c(0.4, 0.6, 0.8, 1.0),
+  min_child_weight = xgb_tune2$bestTune$min_child_weight,
+  subsample = c(0.5, 0.75, 1.0)
+)
+
+xgb_tune3 <- caret::train(
+  x = training_x,
+  y = training_y,
+  trControl = tune_control,
+  tuneGrid = tune_grid3,
+  method = "xgbTree",
+  verbose = FALSE,
+  verbosity = 0
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+xgb_tune3$finalModel
+```
+
+```{r}
+xgb_tune3$bestTune
+```
+
+```{r echo=FALSE}
+ggplot(xgb_tune3)
+```
+
+```{r}
+round(min(xgb_tune3$results$RMSE), digits = 5)
+```
+
+### Gamma
+
+```{r warning=FALSE}
+tune_grid4 <- expand.grid(
+  nrounds = seq(from = 50, to = nrounds, by = 50),
+  eta = xgb_tune$bestTune$eta,
+  max_depth = xgb_tune2$bestTune$max_depth,
+  gamma = c(0, 0.05, 0.1, 0.5, 0.7, 0.9, 1.0),
+  colsample_bytree = xgb_tune3$bestTune$colsample_bytree,
+  min_child_weight = xgb_tune2$bestTune$min_child_weight,
+  subsample = xgb_tune3$bestTune$subsample
+)
+
+xgb_tune4 <- caret::train(
+  x = training_x,
+  y = training_y,
+  trControl = tune_control,
+  tuneGrid = tune_grid4,
+  method = "xgbTree",
+  verbose = FALSE,
+  verbosity = 0
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+xgb_tune4$finalModel
+```
+
+```{r}
+xgb_tune4$bestTune
+```
+
+```{r echo=FALSE}
+ggplot(xgb_tune4)
+```
+
+```{r}
+round(min(xgb_tune4$results$RMSE), digits = 5)
+```
+
+### Reducing the Learning Rate
+
+```{r warning=FALSE}
+tune_grid5 <- expand.grid(
+  nrounds = seq(from = 100, to = 10000, by = 100),
+  eta = c(0.01, 0.015, 0.025, 0.05, 0.1),
+  max_depth = xgb_tune2$bestTune$max_depth,
+  gamma = xgb_tune4$bestTune$gamma,
+  colsample_bytree = xgb_tune3$bestTune$colsample_bytree,
+  min_child_weight = xgb_tune2$bestTune$min_child_weight,
+  subsample = xgb_tune3$bestTune$subsample
+)
+
+xgb_tune5 <- caret::train(
+  x = training_x,
+  y = training_y,
+  trControl = tune_control,
+  tuneGrid = tune_grid5,
+  method = "xgbTree",
+  verbose = FALSE,
+  verbosity = 0
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+xgb_tune5$finalModel
+```
+
+```{r}
+xgb_tune5$bestTune
+```
+
+```{r echo=FALSE}
+ggplot(xgb_tune5)
+```
+
+```{r}
+round(min(xgb_tune5$results$RMSE), digits = 5)
+```
+
+### Final model
+
+```{r}
+train_control <- caret::trainControl(
+  method = "none",
+  verboseIter = FALSE, # no training log
+  allowParallel = TRUE  
+)
+
+(final_grid <- expand.grid(
+  nrounds = xgb_tune5$bestTune$nrounds,
+  eta = xgb_tune5$bestTune$eta,
+  max_depth = xgb_tune5$bestTune$max_depth,
+  gamma = xgb_tune5$bestTune$gamma,
+  colsample_bytree = xgb_tune5$bestTune$colsample_bytree,
+  min_child_weight = xgb_tune5$bestTune$min_child_weight,
+  subsample = xgb_tune5$bestTune$subsample
+))
+```
+
+```{r warning=FALSE}
+m_xgb_tu <- caret::train(
+  x = training_x,
+  y = training_y,
+  trControl = train_control,
+  tuneGrid = final_grid,
+  method = "xgbTree",
+  verbose = FALSE,
+  verbosity = 0
+)
+```
+
+```{r include=FALSE}
+write_rds(m_xgb_tu, "results/m_xgb_tu.Rds")
+```
+
+```{r eval=FALSE, include=FALSE}
+m_xgb_tu$finalModel
+```
+
+```{r}
+m_xgb_tu$bestTune
+```
+
+Feature importance:  
+
+```{r}
+importance <- xgb.importance(model = m_xgb_tu$finalModel)
+```
+
+```{r}
+xgb.plot.importance(importance, top_n = 15)
+```
+
+## Prediction with testing dataset
+
+```{r}
+p_xgb_tu <- predict(m_xgb_tu, testing_x)
+```
+
+Correlation:  
+
+```{r}
+cor(p_xgb_tu, testing_y)
+```
+
+MAE:  
+
+```{r}
+ModelMetrics::mae(testing_y, p_xgb_tu)
+```
+
+RMSE:  
+
+```{r}
+ModelMetrics::rmse(testing_y, p_xgb_tu)
+```
+
+Distro of predicted (red) nd actual (green): 
+
+```{r echo=FALSE}
+ggplot() +
+  geom_density(data = as.data.frame(p_xgb_tu), aes(x = p_xgb_tu), col = "firebrick") +
+  geom_density(data = as.data.frame(testing_y), aes(x = testing_y), col = "forestgreen") 
+```
+
+## Prediction with full dataset
+
+```{r}
+data <- bind_rows(read_rds("data/training.Rds"),
+                  read_rds("data/testing.Rds"))
+
+data_x <- as.matrix(select(data, -outcome))
+data_y <- data$outcome
+```
+
+### Default model
+
+```{r warning=FALSE}
+m_xgb_tu <- caret::train(
+  x = data_x,
+  y = data_y,
+  trControl = train_control,
+  tuneGrid = grid_default,
+  method = "xgbTree",
+  verbose = FALSE)
+```
+
+```{r}
+m_xgb_tu$finalModel
+```
+
+Feature importance:  
+
+```{r}
+importance <- xgb.importance(model = m_xgb_tu$finalModel)
+```
+
+```{r}
+xgb.plot.importance(importance, top_n = 15)
+```
+
+```{r}
+p_xgb_tu <- predict(m_xgb_tu, data_x)
+```
+
+Correlation:  
+
+```{r}
+cor(p_xgb_tu, data_y)
+```
+
+MAE:  
+
+```{r}
+ModelMetrics::mae(data_y, p_xgb_tu)
+```
+
+RMSE:  
+
+```{r}
+ModelMetrics::rmse(data_y, p_xgb_tu)
+```
+
+Distro of predicted (red) nd actual (green): 
+
+```{r echo=FALSE}
+ggplot() +
+  geom_density(data = as.data.frame(p_xgb_tu), aes(x = p_xgb_tu), col = "firebrick") +
+  geom_density(data = as.data.frame(data_y), aes(x = data_y), col = "forestgreen") 
+```
+
+### Tuned model
+
+```{r warning=FALSE}
+m_xgb_tu <- caret::train(
+  x = data_x,
+  y = data_y,
+  trControl = train_control,
+  tuneGrid = final_grid,
+  method = "xgbTree",
+  verbose = FALSE)
+```
+
+```{r}
+m_xgb_tu$finalModel
+```
+
+Feature importance:  
+
+```{r}
+importance <- xgb.importance(model = m_xgb_tu$finalModel)
+```
+
+```{r}
+xgb.plot.importance(importance, top_n = 15)
+```
+
+```{r}
+p_xgb_tu <- predict(m_xgb_tu, data_x)
+```
+
+Correlation:  
+
+```{r}
+cor(p_xgb_tu, data_y)
+```
+
+MAE:  
+
+```{r}
+ModelMetrics::mae(data_y, p_xgb_tu)
+```
+
+RMSE:  
+
+```{r}
+ModelMetrics::rmse(data_y, p_xgb_tu)
+```
+
+Distro of predicted (red) nd actual (green): 
+
+```{r echo=FALSE}
+ggplot() +
+  geom_density(data = as.data.frame(p_xgb_tu), aes(x = p_xgb_tu), col = "firebrick") +
+  geom_density(data = as.data.frame(data_y), aes(x = data_y), col = "forestgreen") 
+```
