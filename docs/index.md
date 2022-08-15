@@ -7,9 +7,7 @@ title: "Pets as Indicators"
 
 ### Animal data 
 
-Brisbane City Council's data on 
-- [animal permits](https://www.data.brisbane.qld.gov.au/data/dataset/current-animal-related-permits)  
-- [animal complaints](https://www.data.brisbane.qld.gov.au/data/dataset/animal-related-complaints)  
+Brisbane City Council's data on animal permits. Original [source]](https://www.data.brisbane.qld.gov.au/data/dataset/current-animal-related-permits) link is dead now. Cached [version](https://webcache.googleusercontent.com/search?q=cache:8Da3hm4uKFQJ:https://www.data.brisbane.qld.gov.au/data/dataset/current-animal-related-permits&cd=1&hl=en&ct=clnk&gl=ch).  
 
 ### SEP data 
 
