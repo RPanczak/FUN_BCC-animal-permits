@@ -1,0 +1,96 @@
+---
+title: "Dog-SEP"
+subtitle: "Machine learning: h2o testing"
+pagetitle: "Dog-SEP: h2o"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: no
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    self_contained: true
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../docs") })
+---
+
+<!-- ------------------------------------------------------------ --> 
+
+```{r r-setup, include=FALSE}
+set.seed(12345)
+options(scipen = 999)
+options(max.print = "75")
+
+library(pacman)
+p_load(tidyverse, magrittr, DT,
+       caret, rpart, rpart.plot, Cubist)
+
+import::from("sjmisc", "frq")
+```
+
+```{r knit-setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width = 8, fig.height = 6, dpi = 300, 
+                      out.width = "800px", out.height = "600px")
+
+knitr::opts_chunk$set(cache = FALSE,
+                      prompt = FALSE,
+                      tidy = FALSE,
+                      comment = NA,
+                      message = FALSE,
+                      warning = FALSE)
+
+knitr::opts_knit$set(width = 75)
+
+mu <- Hmisc::markupSpecs$html
+```
+
+```{r include=FALSE}
+# function to calculate the mean absolute error
+MAE <- function(actual, predicted) {
+  mean(abs(actual - predicted))  
+}
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Background 
+
+Using info from  
+
+# Installs
+
+```{r eval=FALSE}
+if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
+if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
+
+pkgs <- c("RCurl","jsonlite")
+for (pkg in pkgs) {
+  if (! (pkg %in% rownames(installed.packages()))) { install.packages(pkg) }
+}
+
+install.packages("h2o", type="source", repos=(c("http://h2o-release.s3.amazonaws.com/h2o/latest_stable_R")))
+
+library(h2o)
+localH2O = h2o.init()
+demo(h2o.kmeans)
+```
+
+<!-- ------------------------------------------------------------ --> 
+
+# Analysis with `rpart`
+
+## Data 
+
+```{r include=FALSE}
+training <- read_rds("data/training.Rds")
+testing <- read_rds("data/testing.Rds")
+```
