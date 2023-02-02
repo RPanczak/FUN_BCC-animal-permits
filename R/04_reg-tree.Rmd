@@ -282,8 +282,8 @@ modelLookup("cubist")
 Using grid of parameters to explore:  
 
 ```{r}
-grid_tu <-  expand.grid(committees = (50:60), 
-                        neighbors = (5:8))
+grid_tu <-  expand.grid(committees = (50:100), 
+                        neighbors = (5:9))
 
 nrow(grid_tu)
 ```
