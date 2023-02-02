@@ -328,7 +328,7 @@ pca_results <- wide_insurance_p %>%
   st_drop_geometry() %>% 
   as_tibble() %>% 
   select(SSC_CODE16:caution) %>% 
-  mutate(pca_raw = predict(pca)$Component_1, 
+  mutate(pca_raw = predict(pca)$PC1, 
          pca = ntile(pca_raw, 10)) 
 ```
 
