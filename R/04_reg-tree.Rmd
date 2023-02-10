@@ -67,6 +67,23 @@ Using info from chapter 6 of *Machine Learning with R* [book](https://www.packtp
 
 <!-- ------------------------------------------------------------ --> 
 
+# CV set up
+
+3-fold CV.
+
+```{r}
+fit_control <- trainControl(method = "cv",
+                            number = 3)
+```
+
+<!-- 10-fold CV repeated.     -->
+
+```{r eval=FALSE, include=FALSE}
+fit_control <- trainControl(method = "repeatedcv",
+                            number = 10,
+                            repeats = 10)
+```
+
 # Analysis with `rpart`
 
 ## Data 
@@ -164,7 +181,8 @@ m_rpart_tu <- train(outcome ~ .,
                     # weights = training_weights, 
                     metric = "RMSE",
                     # metric = "Rsquared",
-                    tuneGrid = grid_tu)
+                    tuneGrid = grid_tu,
+                    trControl = fit_control)
 
 stopCluster(cl)
 p_unload(doParallel)
@@ -301,7 +319,8 @@ m_cubist_tu <- train(outcome ~ .,
                      # weights = training_weights, 
                      metric = "RMSE",
                      # metric = "Rsquared",
-                     tuneGrid = grid_tu)
+                     tuneGrid = grid_tu,
+                     trControl = fit_control)
 
 stopCluster(cl)
 p_unload(doParallel)
