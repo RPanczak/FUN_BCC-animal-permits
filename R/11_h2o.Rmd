@@ -29,8 +29,7 @@ options(max.print = "75")
 
 library(pacman)
 p_load(
-  tidyverse, magrittr, DT,
-  caret, rpart, rpart.plot, Cubist
+  tidyverse, magrittr, DT
 )
 
 import::from("sjmisc", "frq")
@@ -66,14 +65,6 @@ MAE <- function(actual, predicted) {
 }
 ```
 
-<!-- ------------------------------------------------------------ --> 
-
-# Background 
-
-Using info from  
-
-# Installs
-
 ```{r eval=FALSE}
 if ("package:h2o" %in% search()) {
   detach("package:h2o", unload = TRUE)
@@ -87,19 +78,33 @@ p_load("RCurl", "jsonlite")
 install.packages("h2o", type = "source", repos = (c("http://h2o-release.s3.amazonaws.com/h2o/latest_stable_R")))
 ```
 
-```{r}
-library(h2o)
-localH2O <- h2o.init()
-demo(h2o.kmeans)
-```
-
 <!-- ------------------------------------------------------------ --> 
 
-# Analysis with `rpart`
+# Analysis with `lares`
+
+```{r}
+p_load(h2o, lares)
+localH2O <- h2o.init()
+```
 
 ## Data 
 
 ```{r include=FALSE}
-training <- read_rds("data/training.Rds")
-testing <- read_rds("data/testing.Rds")
+data <- bind_rows(read_rds("data/training.Rds"),
+                  read_rds("data/testing.Rds"))
 ```
+
+```{r}
+r <- h2o_automl(data, y = outcome, 
+                max_models = 10, impute = FALSE, target = "TRUE")
+
+r$metrics$metrics
+
+r$plots$dashboard
+
+r$plots$importance
+
+r$plots$gains
+
+```
+
