@@ -190,8 +190,8 @@ tune_grid <- expand.grid(
 )
 
 tune_control <- caret::trainControl(
-  method = "cv", # cross-validation
-  number = 3, # with n folds 
+  method = "cv",
+  number = 3,
   # index = createFolds(tr_treated$Id_clean), # fix the folds
   verboseIter = FALSE, # no training log
   allowParallel = TRUE 
