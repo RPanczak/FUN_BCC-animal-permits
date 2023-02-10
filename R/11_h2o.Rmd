@@ -1,6 +1,6 @@
 ---
 title: "Dog-SEP"
-subtitle: "Machine learning: h2o testing"
+subtitle: "Machine learning: h2o & lares"
 pagetitle: "Dog-SEP: h2o"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -97,14 +97,16 @@ data <- bind_rows(read_rds("data/training.Rds"),
 ```{r}
 r <- h2o_automl(data, y = outcome, 
                 max_models = 10, impute = FALSE, target = "TRUE")
-
-r$metrics$metrics
-
-r$plots$dashboard
-
-r$plots$importance
-
-r$plots$gains
-
 ```
 
+```{r}
+r$metrics$metrics
+```
+
+```{r}
+r$plots$dashboard
+```
+
+```{r}
+r$plots$importance
+```
