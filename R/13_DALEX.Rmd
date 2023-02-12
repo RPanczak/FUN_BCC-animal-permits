@@ -30,7 +30,8 @@ options(max.print = "75")
 library(pacman)
 p_load(tidyverse, magrittr, DT,
        ModelMetrics, 
-       DALEX, caret)
+       DALEX, DALEXtra,
+       h2o)
 
 import::from("sjmisc", "frq")
 ```
@@ -60,19 +61,19 @@ mu <- Hmisc::markupSpecs$html
 
 ## Background 
 
-Using `DALEX` package to explore results from various models fitted with `caret. Based on info from [here](https://htmlpreview.github.io/?https://github.com/ModelOriented/DALEX-docs/blob/master/vignettes/DALEX_caret.html). 
+Using `DALEX` package to explore results from various models fitted with `caret` and auto ML from `h2o`. Based on info from [here](https://htmlpreview.github.io/?https://github.com/ModelOriented/DALEX-docs/blob/master/vignettes/DALEX_caret.html) and [here](https://github.com/RPanczak/FUN_BCC-animal-permits/issues/32). 
 
 ## Load data
 
 ```{r include=FALSE}
-training <- read_rds("data/training.Rds")
 testing <- read_rds("data/testing.Rds")
-
-training_x <- as.matrix(select(training, -outcome))
-training_y <- training$outcome
 
 testing_x <- as.matrix(select(testing, -outcome))
 testing_y <- testing$outcome
+
+h2o.init()
+
+testing_h2o <- as.h2o(read_rds("data/testing.Rds"))
 ```
 
 ## Load results
@@ -85,8 +86,11 @@ m_cubist_tu <- read_rds("results/m_cubist_tu.Rds")
 m_rf_tu <- read_rds("results/m_rf_tu.Rds")
 m_rf2_tu <- read_rds("results/m_rf2_tu.Rds")
 
-#xgb
+# xgb
 m_xgb_tu <- read_rds("results/m_xgb_tu.Rds")
+
+# auto ml
+m_h2o_aml <- read_rds("results/m_h2o_aml.Rds")
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -95,20 +99,24 @@ m_xgb_tu <- read_rds("results/m_xgb_tu.Rds")
 
 ```{r}
 explainer_cubist <- DALEX::explain(m_cubist_tu, label = "cubist", 
-                                   data = training, y = training$outcome, 
+                                   data = testing, y = testing$outcome, 
                                    verbose = FALSE)
 
 explainer_rf1 <- DALEX::explain(m_rf_tu, label = "rf1", 
-                                data = training, y = training$outcome, 
+                                data = testing, y = testing$outcome, 
                                 verbose = FALSE)
 
 explainer_rf2 <- DALEX::explain(m_rf2_tu, label = "rf2", 
-                                data = training, y = training$outcome, 
+                                data = testing, y = testing$outcome, 
                                 verbose = FALSE)
 
 explainer_xgb <- DALEX::explain(m_xgb_tu, label = "xgb", 
-                                data = training_x, y = training_y, 
+                                data = testing_x, y = testing_y, 
                                 verbose = FALSE)
+
+explainer_h2o <- DALEXtra::explain_h2o(m_h2o_aml, label = "h2o", 
+                                       data = testing_h2o, y = testing_h2o$outcome, 
+                                       verbose = FALSE)
 ```
 
 # Model performance
@@ -118,14 +126,15 @@ explainer_xgb <- DALEX::explain(m_xgb_tu, label = "xgb",
 (mp_rf1 <- model_performance(explainer_rf1))
 (mp_rf2 <- model_performance(explainer_rf2))
 (mp_xgb <- model_performance(explainer_xgb))
+(mp_h2o <- model_performance(explainer_h2o))
 ```
 
 ```{r echo=FALSE}
-plot(mp_cubist, mp_rf1, mp_rf2, mp_xgb)
+plot(mp_cubist, mp_rf1, mp_rf2, mp_xgb, mp_h2o)
 ```
 
 ```{r echo=FALSE}
-plot(mp_cubist, mp_rf1, mp_rf2, mp_xgb, geom = "boxplot")
+plot(mp_cubist, mp_rf1, mp_rf2, mp_xgb, mp_h2o, geom = "boxplot")
 ```
 
 # Variable importance
@@ -135,14 +144,15 @@ vi_cubist <- model_parts(explainer_cubist, loss_function = loss_root_mean_square
 vi_rf1 <- model_parts(explainer_rf1, loss_function = loss_root_mean_square)
 vi_rf2 <- model_parts(explainer_rf2, loss_function = loss_root_mean_square)
 vi_xgb <- model_parts(explainer_xgb, loss_function = loss_root_mean_square)
+vi_h2o <- model_parts(explainer_h2o, loss_function = loss_root_mean_square)
 ```
 
 ```{r echo=FALSE}
-plot(vi_cubist, vi_rf1, vi_rf2, vi_xgb)
+plot(vi_cubist, vi_rf1, vi_rf2, vi_xgb, vi_h2o)
 ```
 
 ```{r echo=FALSE}
-plot(vi_cubist)
+plot(vi_xgb)
 ```
 
 # Partial Dependence Plot
@@ -152,10 +162,11 @@ pdp_cubist <- model_profile(explainer_cubist, variable = "poodle", type = "parti
 pdp_rf1 <- model_profile(explainer_rf1, variable = "poodle", type = "partial")
 pdp_rf2 <- model_profile(explainer_rf2, variable = "poodle", type = "partial")
 pdp_xgb <- model_profile(explainer_xgb, variable = "poodle", type = "partial")
+pdp_h2o <- model_profile(explainer_h2o, variable = "poodle", type = "partial")
 ```
 
 ```{r echo=FALSE}
-plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb)
+plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb, pdp_h2o)
 ```
 
 ```{r}
@@ -163,10 +174,11 @@ pdp_cubist <- model_profile(explainer_cubist, variable = "staffordshire_bull_ter
 pdp_rf1 <- model_profile(explainer_rf1, variable = "staffordshire_bull_terrier", type = "partial")
 pdp_rf2 <- model_profile(explainer_rf2, variable = "staffordshire_bull_terrier", type = "partial")
 pdp_xgb <- model_profile(explainer_xgb, variable = "staffordshire_bull_terrier", type = "partial")
+pdp_h2o <- model_profile(explainer_h2o, variable = "staffordshire_bull_terrier", type = "partial")
 ```
 
 ```{r echo=FALSE}
-plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb)
+plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb, pdp_h2o)
 ```
 
 # Acumulated Local Effects plot
