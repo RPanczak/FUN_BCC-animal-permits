@@ -43,6 +43,18 @@
         "ingredients"
       ]
     },
+    "DALEXtra": {
+      "Package": "DALEXtra",
+      "Version": "2.2.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "e334e8eab5b36888c2d0427128670475",
+      "Requirements": [
+        "DALEX",
+        "ggplot2",
+        "reticulate"
+      ]
+    },
     "DBI": {
       "Package": "DBI",
       "Version": "1.1.3",
@@ -188,6 +200,16 @@
       "Hash": "1e035db628cefb315c571202d70202fe",
       "Requirements": [
         "Matrix",
+        "Rcpp"
+      ]
+    },
+    "RcppTOML": {
+      "Package": "RcppTOML",
+      "Version": "0.2.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c232938949fcd8126034419cc529333a",
+      "Requirements": [
         "Rcpp"
       ]
     },
@@ -1121,6 +1143,16 @@
         "vctrs"
       ]
     },
+    "here": {
+      "Package": "here",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "24b224366f9c2e7534d2344d10d59211",
+      "Requirements": [
+        "rprojroot"
+      ]
+    },
     "highr": {
       "Package": "highr",
       "Version": "0.10",
@@ -1678,6 +1710,22 @@
         "Rcpp"
       ]
     },
+    "modelStudio": {
+      "Package": "modelStudio",
+      "Version": "3.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "04244e3525aeb6fa8c2a4987aea3adf1",
+      "Requirements": [
+        "DALEX",
+        "digest",
+        "iBreakDown",
+        "ingredients",
+        "jsonlite",
+        "progress",
+        "r2d3"
+      ]
+    },
     "modelbased": {
       "Package": "modelbased",
       "Version": "0.8.6",
@@ -2055,6 +2103,19 @@
         "vctrs"
       ]
     },
+    "r2d3": {
+      "Package": "r2d3",
+      "Version": "0.2.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "86e5144cf31e5e102b2f75be50176248",
+      "Requirements": [
+        "htmltools",
+        "htmlwidgets",
+        "jsonlite",
+        "rstudioapi"
+      ]
+    },
     "randomForest": {
       "Package": "randomForest",
       "Version": "4.7-1.1",
@@ -2230,6 +2291,23 @@
         "Rcpp",
         "plyr",
         "stringr"
+      ]
+    },
+    "reticulate": {
+      "Package": "reticulate",
+      "Version": "1.28",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "86c441bf33e1d608db773cb94b848458",
+      "Requirements": [
+        "Matrix",
+        "Rcpp",
+        "RcppTOML",
+        "here",
+        "jsonlite",
+        "png",
+        "rappdirs",
+        "withr"
       ]
     },
     "rlang": {
