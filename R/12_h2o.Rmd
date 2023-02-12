@@ -1,6 +1,6 @@
 ---
 title: "Dog-SEP"
-subtitle: "Machine learning: h2o & lares"
+subtitle: "Machine learning: h2o & DALEX"
 pagetitle: "Dog-SEP: h2o"
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -22,47 +22,34 @@ knit: (function(inputFile, encoding) {
 
 <!-- ------------------------------------------------------------ --> 
 
-```{r r-setup, include=FALSE}
+```{r r-setup}
 set.seed(12345)
 options(scipen = 999)
 options(max.print = "75")
 
 library(pacman)
 p_load(
-  tidyverse, magrittr, DT
+  tidyverse, magrittr, DT,
+  h2o, 
+  DALEX, DALEXtra
 )
-
-import::from("sjmisc", "frq")
 ```
 
 ```{r knit-setup, include=FALSE}
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file(),
+                     width = 75)
 
 knitr::opts_chunk$set(
-  echo = TRUE, message = FALSE, warning = FALSE,
-  fig.width = 8, fig.height = 6, dpi = 300,
-  out.width = "800px", out.height = "600px"
-)
-
-knitr::opts_chunk$set(
+  echo = TRUE,
   cache = FALSE,
   prompt = FALSE,
   tidy = FALSE,
   comment = NA,
   message = FALSE,
-  warning = FALSE
+  warning = FALSE,
+  fig.width = 8, fig.height = 6, dpi = 300,
+  out.width = "800px", out.height = "600px"
 )
-
-knitr::opts_knit$set(width = 75)
-
-mu <- Hmisc::markupSpecs$html
-```
-
-```{r include=FALSE}
-# function to calculate the mean absolute error
-MAE <- function(actual, predicted) {
-  mean(abs(actual - predicted))
-}
 ```
 
 ```{r eval=FALSE}
@@ -80,33 +67,55 @@ install.packages("h2o", type = "source", repos = (c("http://h2o-release.s3.amazo
 
 <!-- ------------------------------------------------------------ --> 
 
-# Analysis with `lares`
-
-```{r}
-p_load(h2o, lares)
-localH2O <- h2o.init()
-```
-
-## Data 
+# Data 
 
 ```{r include=FALSE}
-data <- bind_rows(read_rds("data/training.Rds"),
-                  read_rds("data/testing.Rds"))
+training <- read_rds("data/training.Rds")
+testing <- read_rds("data/testing.Rds")
+```
+
+# Analysis with `h2o`
+
+## Data formatting 
+
+```{r}
+h2o.init()
+
+target <- "outcome"
+training <- as.h2o(training)
+testing <- as.h2o(testing)
+```
+
+## Model  
+
+```{r}
+r <- h2o.automl(y = target, training_frame = training, max_models = 50)
 ```
 
 ```{r}
-r <- h2o_automl(data, y = outcome, 
-                max_models = 10, impute = FALSE, target = "TRUE")
+leader_board <- h2o.get_leaderboard(r)
+head(leader_board)
+```
+
+## Predict 
+
+```{r eval=FALSE}
+new_obs <- testing[1, ]
+
+pb <- predict_parts(explainer, 
+                    new_observation = new_obs, 
+                    type = "break_down")
+
+plot(pb)
+```
+
+# `modelStudio` 
+
+```{r eval=FALSE, include=FALSE}
+library(modelStudio)
+modelStudio::modelStudio(explainer)
 ```
 
 ```{r}
-r$metrics$metrics
-```
-
-```{r}
-r$plots$dashboard
-```
-
-```{r}
-r$plots$importance
+write_rds(r, "results/m_h2o_aml.Rds")
 ```
