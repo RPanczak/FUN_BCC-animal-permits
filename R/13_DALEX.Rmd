@@ -90,7 +90,7 @@ m_rf2_tu <- read_rds("results/m_rf2_tu.Rds")
 m_xgb_tu <- read_rds("results/m_xgb_tu.Rds")
 
 # auto ml
-m_h2o_aml <- read_rds("results/m_h2o_aml.Rds")
+m_h2o_aml <- h2o.loadModel("results/m_h2o_aml")
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -158,7 +158,7 @@ plot(vi_xgb)
 # Partial Dependence Plot
 
 ```{r}
-pdp_cubist <- model_profile(explainer_cubist, variable = "poodle", type = "partial")
+# pdp_cubist <- model_profile(explainer_cubist, variable = "poodle", type = "partial")
 pdp_rf1 <- model_profile(explainer_rf1, variable = "poodle", type = "partial")
 pdp_rf2 <- model_profile(explainer_rf2, variable = "poodle", type = "partial")
 pdp_xgb <- model_profile(explainer_xgb, variable = "poodle", type = "partial")
@@ -166,11 +166,12 @@ pdp_h2o <- model_profile(explainer_h2o, variable = "poodle", type = "partial")
 ```
 
 ```{r echo=FALSE}
-plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb, pdp_h2o)
+plot(# pdp_cubist, 
+     pdp_rf1, pdp_rf2, pdp_xgb, pdp_h2o)
 ```
 
 ```{r}
-pdp_cubist <- model_profile(explainer_cubist, variable = "staffordshire_bull_terrier", type = "partial")
+# pdp_cubist <- model_profile(explainer_cubist, variable = "staffordshire_bull_terrier", type = "partial")
 pdp_rf1 <- model_profile(explainer_rf1, variable = "staffordshire_bull_terrier", type = "partial")
 pdp_rf2 <- model_profile(explainer_rf2, variable = "staffordshire_bull_terrier", type = "partial")
 pdp_xgb <- model_profile(explainer_xgb, variable = "staffordshire_bull_terrier", type = "partial")
@@ -178,29 +179,34 @@ pdp_h2o <- model_profile(explainer_h2o, variable = "staffordshire_bull_terrier",
 ```
 
 ```{r echo=FALSE}
-plot(pdp_cubist, pdp_rf1, pdp_rf2, pdp_xgb, pdp_h2o)
+plot(# pdp_cubist, 
+     pdp_rf1, pdp_rf2, pdp_xgb, pdp_h2o)
 ```
 
 # Acumulated Local Effects plot
 
 ```{r}
-ale_cubist <- model_profile(explainer_cubist, variable = "poodle", type = "accumulated")
+# ale_cubist <- model_profile(explainer_cubist, variable = "poodle", type = "accumulated")
 ale_rf1 <- model_profile(explainer_rf1, variable = "poodle", type = "accumulated")
 ale_rf2 <- model_profile(explainer_rf2, variable = "poodle", type = "accumulated")
 ale_xgb <- model_profile(explainer_xgb, variable = "poodle", type = "accumulated")
+ale_h2o <- model_profile(explainer_h2o, variable = "poodle", type = "accumulated")
 ```
 
 ```{r echo=FALSE}
-plot(ale_cubist, ale_rf1, ale_rf2, ale_xgb)
+plot(# ale_cubist, 
+     ale_rf1, ale_rf2, ale_xgb, ale_h2o)
 ```
 
 ```{r}
-ale_cubist <- model_profile(explainer_cubist, variable = "staffordshire_bull_terrier", type = "accumulated")
+# ale_cubist <- model_profile(explainer_cubist, variable = "staffordshire_bull_terrier", type = "accumulated")
 ale_rf1 <- model_profile(explainer_rf1, variable = "staffordshire_bull_terrier", type = "accumulated")
 ale_rf2 <- model_profile(explainer_rf2, variable = "staffordshire_bull_terrier", type = "accumulated")
 ale_xgb <- model_profile(explainer_xgb, variable = "staffordshire_bull_terrier", type = "accumulated")
+ale_h2o <- model_profile(explainer_h2o, variable = "staffordshire_bull_terrier", type = "accumulated")
 ```
 
 ```{r echo=FALSE}
-plot(ale_cubist, ale_rf1, ale_rf2, ale_xgb)
+plot(# ale_cubist, 
+     ale_rf1, ale_rf2, ale_xgb, ale_h2o)
 ```
