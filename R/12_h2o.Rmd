@@ -89,15 +89,26 @@ testing <- as.h2o(testing)
 ## Model  
 
 ```{r}
-r <- h2o.automl(y = target, training_frame = training, max_models = 50)
+m_h2o_aml <- h2o.automl(y = target, 
+                        training_frame = training, 
+                        max_models = 50)
 ```
 
 ```{r}
-leader_board <- h2o.get_leaderboard(r)
+leader_board <- h2o.get_leaderboard(m_h2o_aml)
 head(leader_board)
+
+m_h2o_aml@leader
 ```
 
 ## Predict 
+
+```{r}
+explainer <- DALEXtra::explain_h2o(m_h2o_aml, 
+                                   label = "h2o", 
+                                   data = testing, y = testing$outcome, 
+                                   verbose = FALSE)
+```
 
 ```{r eval=FALSE}
 new_obs <- testing[1, ]
@@ -109,13 +120,26 @@ pb <- predict_parts(explainer,
 plot(pb)
 ```
 
-# `modelStudio` 
-
 ```{r eval=FALSE, include=FALSE}
+# `modelStudio` 
 library(modelStudio)
-modelStudio::modelStudio(explainer)
+
+# set up the cluster
+options(
+  parallelMap.default.mode        = "socket",
+  parallelMap.default.cpus        = 9,
+  parallelMap.default.show.info   = FALSE
+)
+
+# calculations of local explanations will be distributed into 4 cores
+modelStudio(explainer,
+            new_observation = testing[1:10,],
+            parallel = TRUE)
 ```
 
 ```{r}
-write_rds(r, "results/m_h2o_aml.Rds")
+model_path <- h2o.saveModel(object = m_h2o_aml@leader, 
+                            path = "results", force = TRUE,
+                            filename = "m_h2o_aml")
+print(model_path)
 ```
