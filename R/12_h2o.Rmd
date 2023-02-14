@@ -95,8 +95,10 @@ m_h2o_aml <- h2o.automl(y = target,
 ```
 
 ```{r}
-leader_board <- h2o.get_leaderboard(m_h2o_aml)
-head(leader_board)
+h2o.get_leaderboard(m_h2o_aml) %>% 
+  as.data.frame() %>%
+  dplyr::select(model_id, rmse) %>%
+  dplyr::slice(1:10)
 
 m_h2o_aml@leader
 ```
