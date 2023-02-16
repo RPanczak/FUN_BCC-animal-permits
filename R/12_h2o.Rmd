@@ -150,6 +150,8 @@ modelStudio(explainer,
 ```{r}
 model_path <- h2o.saveModel(object = m_h2o_aml@leader, 
                             path = "results", force = TRUE,
-                            filename = "m_h2o_aml")
+                            # filename = "m_h2o_aml"
+                            filename = "m_h2o_aml_weight"
+                            )
 print(model_path)
 ```
