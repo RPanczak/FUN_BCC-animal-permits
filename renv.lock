@@ -991,6 +991,21 @@
         "withr"
       ]
     },
+    "glmnet": {
+      "Package": "glmnet",
+      "Version": "4.1-6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "1366be00d5883779604df7e5e0811c32",
+      "Requirements": [
+        "Matrix",
+        "Rcpp",
+        "RcppEigen",
+        "foreach",
+        "shape",
+        "survival"
+      ]
+    },
     "globals": {
       "Package": "globals",
       "Version": "0.16.2",
@@ -1538,6 +1553,14 @@
         "htmlwidgets",
         "leaflet"
       ]
+    },
+    "leaps": {
+      "Package": "leaps",
+      "Version": "3.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "e7023edcf59fd695d92eb01a7f37f991",
+      "Requirements": []
     },
     "libcoin": {
       "Package": "libcoin",
@@ -2409,6 +2432,14 @@
         "Rcpp",
         "geometries"
       ]
+    },
+    "shape": {
+      "Package": "shape",
+      "Version": "1.4.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9067f962730f58b14d8ae54ca885509f",
+      "Requirements": []
     },
     "sjPlot": {
       "Package": "sjPlot",
