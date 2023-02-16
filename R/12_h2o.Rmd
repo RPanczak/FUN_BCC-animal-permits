@@ -90,7 +90,7 @@ h2o.init()
 
 training <- as.h2o(training)
 testing <- as.h2o(testing)
-training_weights <- as.h2o(training_weights)
+# training_weights <- as.h2o(training_weights)
 ```
 
 ## Model  
@@ -98,7 +98,7 @@ training_weights <- as.h2o(training_weights)
 ```{r}
 m_h2o_aml <- h2o.automl(y = "outcome", 
                         training_frame = training, 
-                        weights_column = "weights", 
+                        # weights_column = "weights", 
                         max_models = 50)
 ```
 
@@ -150,8 +150,8 @@ modelStudio(explainer,
 ```{r}
 model_path <- h2o.saveModel(object = m_h2o_aml@leader, 
                             path = "results", force = TRUE,
-                            # filename = "m_h2o_aml"
-                            filename = "m_h2o_aml_weight"
+                            filename = "m_h2o_aml"
+                            # filename = "m_h2o_aml_weight"
                             )
 print(model_path)
 ```

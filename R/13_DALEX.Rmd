@@ -37,22 +37,20 @@ import::from("sjmisc", "frq")
 ```
 
 ```{r knit-setup, include=FALSE}
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file(),
+                     width = 75)
 
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
-                      fig.width = 8, fig.height = 6, dpi = 300, 
-                      out.width = "800px", out.height = "600px")
-
-knitr::opts_chunk$set(cache = FALSE,
-                      prompt = FALSE,
-                      tidy = FALSE,
-                      comment = NA,
-                      message = FALSE,
-                      warning = FALSE)
-
-knitr::opts_knit$set(width = 75)
-
-mu <- Hmisc::markupSpecs$html
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = FALSE,
+  prompt = FALSE,
+  tidy = FALSE,
+  comment = NA,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8, fig.height = 6, dpi = 300,
+  out.width = "800px", out.height = "600px"
+)
 ```
 
 <!-- ------------------------------------------------------------ --> 
@@ -91,6 +89,7 @@ m_xgb_tu <- read_rds("results/m_xgb_tu.Rds")
 
 # auto ml
 m_h2o_aml <- h2o.loadModel("results/m_h2o_aml")
+# m_h2o_aml <- h2o.loadModel("results/m_h2o_aml_weight")
 ```
 
 <!-- ------------------------------------------------------------ --> 
