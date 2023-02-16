@@ -15,7 +15,15 @@ Spatial distribution of dogs across neighbourhoods, with proportion of expensive
 
 ### Dog breeds used to predict deprivation
 
+Best model to predict *Index of Education and Occupation* turned out to be **XGBoost**. Here is the prediction from the best tuned model:  
 
+![image](https://github.com/RPanczak/FUN_BCC-animal-permits/blob/master/results/pred.png)  
+
+Following breeds were found to be most important in predicting the outcome:  
+
+![image](https://github.com/RPanczak/FUN_BCC-animal-permits/blob/master/results/vim.png)   
+
+More details on the comparison of the models can be found [here](https://rpanczak.github.io/FUN_BCC-animal-permits/13_DALEX.html) and full XGBoost analyses are [here](https://rpanczak.github.io/FUN_BCC-animal-permits/09_xgb.html).  
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-image]][cc-by-nc-sa]
 
