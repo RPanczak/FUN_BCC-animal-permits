@@ -72,6 +72,13 @@ install.packages("h2o", type = "source", repos = (c("http://h2o-release.s3.amazo
 ```{r include=FALSE}
 training <- read_rds("data/training.Rds")
 testing <- read_rds("data/testing.Rds")
+
+training_weights <- read_rds("data/training_weights.Rds")
+
+training <- training %>% 
+  bind_cols(training_weights) %>% 
+  rename( weights = `...122`) %>% 
+  mutate(weights = (weights-min(weights)) / (max(weights)-min(weights)))
 ```
 
 # Analysis with `h2o`
@@ -81,16 +88,17 @@ testing <- read_rds("data/testing.Rds")
 ```{r}
 h2o.init()
 
-target <- "outcome"
 training <- as.h2o(training)
 testing <- as.h2o(testing)
+training_weights <- as.h2o(training_weights)
 ```
 
 ## Model  
 
 ```{r}
-m_h2o_aml <- h2o.automl(y = target, 
+m_h2o_aml <- h2o.automl(y = "outcome", 
                         training_frame = training, 
+                        weights_column = "weights", 
                         max_models = 50)
 ```
 
